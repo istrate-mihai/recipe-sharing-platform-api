@@ -23,7 +23,7 @@ class RecipeResource extends JsonResource
             'ingredients' => $this->ingredients,
             'steps'       => $this->steps,
             'image_url'   => $this->image
-                                ? Storage::url($this->image)
+                                ? rtrim(env('AWS_PUBLIC_URL'), '/') . '/' . $this->image
                                 : null,
             'likes_count' => $this->likes_count,
             'created_at'  => $this->created_at,
