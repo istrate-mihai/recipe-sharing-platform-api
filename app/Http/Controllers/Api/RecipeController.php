@@ -20,6 +20,8 @@ class RecipeController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        auth()->shouldUse('sanctum');
+
         $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy'])
             ->search($request->query('search'))
             ->category($request->query('category'))
@@ -62,6 +64,8 @@ class RecipeController extends Controller
      */
     public function show(Request $request, Recipe $recipe): JsonResponse
     {
+        auth()->shouldUse('sanctum');
+
         $recipe->load(['user', 'likedBy', 'favouritedBy']);
 
         return response()->json(new RecipeResource($recipe));
