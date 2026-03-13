@@ -14,8 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Add Sanctum's stateful middleware for SPA cookie-based auth
-        $middleware->statefulApi();
+        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Always return JSON for API routes

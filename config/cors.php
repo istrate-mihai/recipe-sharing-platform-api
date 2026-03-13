@@ -32,6 +32,6 @@ return [
     'max_age' => 0,
 
     // Must be true for Sanctum cookie-based auth; for token auth this can be false
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
