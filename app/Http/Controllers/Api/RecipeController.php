@@ -47,9 +47,13 @@ class RecipeController extends Controller
     public function store(StoreRecipeRequest $request): JsonResponse
     {
         $data = $request->validated();
+        unset($data['image']);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('recipes', 's3');
+            $path = $request->file('image')->store('recipes', 's3');
+            if ($path) {
+                $data['image'] = $path;
+            }
         }
 
         $recipe = $request->user()->recipes()->create($data);
