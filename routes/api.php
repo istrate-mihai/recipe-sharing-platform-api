@@ -1,0 +1,55 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FavouriteController;
+use App\Http\Controllers\Api\LikeController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecipeController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| All routes here are prefixed with /api automatically by Laravel 11.
+|
+*/
+
+// ── Authentication (public) ───────────────────────────────────────────────
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login',    [AuthController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me',      [AuthController::class, 'me']);
+    });
+});
+
+// ── Public recipe endpoints ───────────────────────────────────────────────
+Route::get('recipes',         [RecipeController::class, 'index']);
+Route::get('recipes/{recipe}', [RecipeController::class, 'show']);
+
+// ── Public user profile ───────────────────────────────────────────────────
+Route::get('users/{user}', [ProfileController::class, 'showPublic']);
+
+// ── Authenticated endpoints ───────────────────────────────────────────────
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Recipes CRUD (create / update / delete)
+    Route::post('recipes',            [RecipeController::class, 'store']);
+    Route::post('recipes/{recipe}',   [RecipeController::class, 'update']); // POST with _method=PUT for multipart
+    Route::delete('recipes/{recipe}', [RecipeController::class, 'destroy']);
+
+    // Likes
+    Route::post('recipes/{recipe}/like',      [LikeController::class,      'toggle']);
+
+    // Favourites
+    Route::post('recipes/{recipe}/favourite', [FavouriteController::class, 'toggle']);
+    Route::get('favourites',                  [FavouriteController::class, 'index']);
+
+    // Profile
+    Route::get('profile',   [ProfileController::class, 'show']);
+    Route::post('profile',  [ProfileController::class, 'update']); // POST for multipart avatar upload
+});
