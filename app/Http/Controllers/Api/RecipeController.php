@@ -47,7 +47,7 @@ class RecipeController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('recipes', 'public');
+            $data['image'] = $request->file('image')->store('recipes', 's3');
         }
 
         $recipe = $request->user()->recipes()->create($data);
@@ -82,7 +82,7 @@ class RecipeController extends Controller
             if ($recipe->image) {
                 Storage::disk('public')->delete($recipe->image);
             }
-            $data['image'] = $request->file('image')->store('recipes', 'public');
+            $data['image'] = $request->file('image')->store('recipes', 's3');
         }
 
         $recipe->update($data);
