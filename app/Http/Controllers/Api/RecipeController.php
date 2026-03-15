@@ -27,7 +27,7 @@ class RecipeController extends Controller
             ->category($request->query('category'))
             ->difficulty($request->query('difficulty'))
             ->latest()
-            ->paginate($request->query('per_page', 15));
+            ->paginate($request->query('per_page', 10));
 
         return response()->json([
             'data' => RecipeResource::collection($recipes->items()),
