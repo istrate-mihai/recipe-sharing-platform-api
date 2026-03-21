@@ -23,6 +23,7 @@ class RecipeController extends Controller
         auth()->shouldUse('sanctum');
 
         $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy'])
+            ->withCount('likedBy as likes_count')
             ->search($request->query('search'))
             ->category($request->query('category'))
             ->difficulty($request->query('difficulty'))
@@ -70,6 +71,7 @@ class RecipeController extends Controller
     {
         auth()->shouldUse('sanctum');
 
+        $recipe->loadCount('likedBy as likes_count');
         $recipe->load(['user', 'likedBy', 'favouritedBy']);
 
         return response()->json(new RecipeResource($recipe));
