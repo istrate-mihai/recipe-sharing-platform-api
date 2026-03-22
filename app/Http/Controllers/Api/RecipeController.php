@@ -104,6 +104,7 @@ class RecipeController extends Controller
     /**
      * DELETE /api/recipes/{recipe}
      * Auth + owner only.
+     *
      */
     public function destroy(Recipe $recipe): JsonResponse
     {
@@ -116,5 +117,50 @@ class RecipeController extends Controller
         $recipe->delete();
 
         return response()->json(['message' => 'Recipe deleted.']);
+    }
+
+    /**
+     * GET /api/sitemap.xml
+     * Public. Returns a fresh sitemap with all recipes.
+     */
+    public function sitemap(): \Illuminate\Http\Response
+    {
+        $recipes = Recipe::select('id', 'updated_at')->latest()->get();
+
+        $urls = '';
+
+        // Static pages
+        $staticPages = [
+            ['loc' => '/',        'changefreq' => 'daily',   'priority' => '1.0'],
+            ['loc' => '/about',   'changefreq' => 'monthly', 'priority' => '0.5'],
+            ['loc' => '/contact', 'changefreq' => 'monthly', 'priority' => '0.5'],
+            ['loc' => '/privacy', 'changefreq' => 'monthly', 'priority' => '0.3'],
+        ];
+
+        foreach ($staticPages as $page) {
+            $urls .= "  <url>\n";
+            $urls .= "    <loc>https://recipe-sharing-platform.com{$page['loc']}</loc>\n";
+            $urls .= "    <changefreq>{$page['changefreq']}</changefreq>\n";
+            $urls .= "    <priority>{$page['priority']}</priority>\n";
+            $urls .= "  </url>\n";
+        }
+
+        // Dynamic recipe pages
+        foreach ($recipes as $recipe) {
+            $lastmod = \Carbon\Carbon::parse($recipe->updated_at)->toDateString();
+            $urls .= "  <url>\n";
+            $urls .= "    <loc>https://recipe-sharing-platform.com/recipe/{$recipe->id}</loc>\n";
+            $urls .= "    <lastmod>{$lastmod}</lastmod>\n";
+            $urls .= "    <changefreq>weekly</changefreq>\n";
+            $urls .= "    <priority>0.8</priority>\n";
+            $urls .= "  </url>\n";
+        }
+
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+        $xml .= $urls;
+        $xml .= "</urlset>";
+
+        return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 }

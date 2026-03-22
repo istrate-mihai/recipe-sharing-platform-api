@@ -19,16 +19,16 @@ use Illuminate\Support\Facades\Route;
 // ── Authentication (public) ───────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
-    Route::post('login',    [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('me',      [AuthController::class, 'me']);
+        Route::get('me', [AuthController::class, 'me']);
     });
 });
 
 // ── Public recipe endpoints ───────────────────────────────────────────────
-Route::get('recipes',         [RecipeController::class, 'index']);
+Route::get('recipes', [RecipeController::class, 'index']);
 Route::get('recipes/{recipe}', [RecipeController::class, 'show']);
 
 // ── Public user profile ───────────────────────────────────────────────────
@@ -38,18 +38,20 @@ Route::get('users/{user}', [ProfileController::class, 'showPublic']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // Recipes CRUD (create / update / delete)
-    Route::post('recipes',            [RecipeController::class, 'store']);
-    Route::post('recipes/{recipe}',   [RecipeController::class, 'update']); // POST with _method=PUT for multipart
+    Route::post('recipes', [RecipeController::class, 'store']);
+    Route::post('recipes/{recipe}', [RecipeController::class, 'update']); // POST with _method=PUT for multipart
     Route::delete('recipes/{recipe}', [RecipeController::class, 'destroy']);
 
     // Likes
-    Route::post('recipes/{recipe}/like',      [LikeController::class,      'toggle']);
+    Route::post('recipes/{recipe}/like', [LikeController::class,      'toggle']);
 
     // Favourites
     Route::post('recipes/{recipe}/favourite', [FavouriteController::class, 'toggle']);
-    Route::get('favourites',                  [FavouriteController::class, 'index']);
+    Route::get('favourites', [FavouriteController::class, 'index']);
 
     // Profile
-    Route::get('profile',   [ProfileController::class, 'show']);
-    Route::post('profile',  [ProfileController::class, 'update']); // POST for multipart avatar upload
+    Route::get('profile', [ProfileController::class, 'show']);
+    Route::post('profile', [ProfileController::class, 'update']); // POST for multipart avatar upload
 });
+
+Route::get('sitemap.xml', [RecipeController::class, 'sitemap']);
