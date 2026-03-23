@@ -62,6 +62,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Open Stripe Billing Portal → returns { portal_url }
     Route::post('/billing-portal', [SubscriptionController::class, 'billingPortal']);
+
+    // Premium only — PDF recipe card export
+    Route::middleware('premium')->group(function () {
+        Route::get('recipes/{recipe}/export-pdf', [RecipeController::class, 'exportPdf']);
+    });
 });
 
 Route::get('sitemap.xml', [RecipeController::class, 'sitemap']);

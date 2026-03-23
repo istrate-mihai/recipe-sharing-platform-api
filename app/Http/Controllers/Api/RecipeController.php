@@ -9,8 +9,10 @@ use App\Http\Resources\RecipeResource;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RecipeController extends Controller
 {
@@ -123,7 +125,7 @@ class RecipeController extends Controller
      * GET /api/sitemap.xml
      * Public. Returns a fresh sitemap with all recipes.
      */
-    public function sitemap(): \Illuminate\Http\Response
+    public function sitemap(): Response
     {
         $recipes = Recipe::select('id', 'updated_at')->latest()->get();
 
@@ -162,5 +164,16 @@ class RecipeController extends Controller
         $xml .= "</urlset>";
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+
+    public function exportPdf(Recipe $recipe): Response {
+        $recipe->load('user');
+
+        $pdf = Pdf::loadView('pdf.recipe-card', ['recipe' => $recipe])
+            ->setPaper('a4', 'portrait');
+
+        $filename = \Str::slug($recipe->title) . ' ' . '-recipe-card.pdf';
+
+        return $pdf->download($filename);
     }
 }
