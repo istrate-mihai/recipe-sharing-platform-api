@@ -7,7 +7,9 @@ A RESTful API built with **Laravel 11** and **Laravel Sanctum** (token-based aut
 - **Framework:** Laravel 11
 - **Auth:** Laravel Sanctum (Bearer token)
 - **Database:** MySQL 8+
-- **File Storage:** Laravel `public` disk
+- **File Storage:** Cloudflare R2 (S3-compatible)
+- **Payments:** Stripe (subscriptions, webhooks, billing portal)
+- **PDF Generation:** barryvdh/laravel-dompdf
 
 ---
 
@@ -33,7 +35,7 @@ composer install
 cp .env.example .env
 ```
 
-Edit `.env` and set your database credentials:
+Edit `.env` and set your credentials:
 
 ```env
 DB_DATABASE=recipe_sharing
@@ -42,6 +44,11 @@ DB_PASSWORD=your_password
 
 # Your Vue dev server origin (for CORS)
 FRONTEND_URL=http://localhost:5173
+
+# Stripe
+STRIPE_KEY=pk_test_xxx
+STRIPE_SECRET=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
 ```bash
@@ -115,22 +122,15 @@ Response `201`:
         "email": "jane@example.com",
         "avatar": "JA",
         "bio": "I love cooking.",
-        "created_at": "2024-01-01T00:00:00.000000Z"
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "plan": "free",
+        "subscription_status": null,
+        "remaining_free_recipes": 10,
+        "recipe_count": 0
     },
     "token": "3|plainTextToken..."
 }
 ```
-
-#### POST `/api/auth/login`
-
-```json
-{
-    "email": "ada@example.com",
-    "password": "password"
-}
-```
-
-Response `200` — same shape as register.
 
 ---
 
@@ -143,6 +143,7 @@ Response `200` — same shape as register.
 | POST | `/api/recipes` | ✓ | Create a recipe |
 | POST | `/api/recipes/{id}` | ✓ owner | Update a recipe |
 | DELETE | `/api/recipes/{id}` | ✓ owner | Delete a recipe |
+| GET | `/api/recipes/{id}/export-pdf` | ✓ premium | Download recipe card as PDF |
 
 #### GET `/api/recipes` — Query Parameters
 
@@ -153,74 +154,48 @@ Response `200` — same shape as register.
 | `difficulty` | string | Filter by difficulty |
 | `per_page` | integer | Results per page (default: 15) |
 
-**Example:** `GET /api/recipes?category=pasta&difficulty=easy&per_page=10`
+---
+
+### Subscriptions
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|:----:|-------------|
+| GET | `/api/subscription` | ✓ | Get current plan status |
+| POST | `/api/subscribe` | ✓ | Create a Stripe Checkout session |
+| POST | `/api/billing-portal` | ✓ | Open Stripe Billing Portal |
+| POST | `/api/webhook/stripe` | public | Stripe webhook receiver |
+
+#### GET `/api/subscription`
+
+```json
+{
+    "plan": "premium",
+    "status": "active",
+    "ends_at": null,
+    "price_id": "price_xxx",
+    "remaining_free_recipes": null
+}
+```
+
+#### POST `/api/subscribe`
+
+```json
+{ "price_id": "price_xxx" }
+```
 
 Response:
 
 ```json
-{
-    "data": [ ...recipes ],
-    "meta": {
-        "current_page": 1,
-        "last_page": 3,
-        "per_page": 10,
-        "total": 40
-    }
-}
+{ "checkout_url": "https://checkout.stripe.com/pay/cs_test_..." }
 ```
 
-#### Recipe object shape
+#### POST `/api/billing-portal`
+
+Response:
 
 ```json
-{
-    "id": 1,
-    "title": "Spaghetti Carbonara",
-    "description": "A classic Roman pasta...",
-    "category": "pasta",
-    "difficulty": "medium",
-    "prep_time": 10,
-    "cook_time": 20,
-    "ingredients": [
-        { "amount": "400g", "name": "spaghetti" }
-    ],
-    "steps": [
-        "Bring a large pot of salted water to a boil..."
-    ],
-    "image_url": "http://localhost:8000/storage/recipes/photo.jpg",
-    "likes_count": 54,
-    "created_at": "2024-01-01T00:00:00.000000Z",
-    "updated_at": "2024-01-01T00:00:00.000000Z",
-    "author": {
-        "id": 1,
-        "name": "Ada Lovelace",
-        "avatar": "AL"
-    },
-    "is_liked": false,
-    "is_favourited": false,
-    "is_owner": false
-}
+{ "portal_url": "https://billing.stripe.com/session/..." }
 ```
-
-`is_liked`, `is_favourited`, and `is_owner` reflect the authenticated user's state. They are `false` for unauthenticated requests.
-
-#### POST `/api/recipes` — Create / Update
-
-Send as `multipart/form-data` when including an image, otherwise `application/json`.
-
-| Field | Type | Rules |
-|-------|------|-------|
-| `title` | string | required, min 3 |
-| `description` | string | required, min 20 |
-| `category` | string | required — `breakfast` `pasta` `soup` `salad` `meat` `dessert` `vegetarian` `other` |
-| `difficulty` | string | required — `easy` `medium` `hard` |
-| `prep_time` | integer | required, minutes |
-| `cook_time` | integer | required, minutes |
-| `steps[]` | array | required, min 1 item |
-| `ingredients[].name` | string | required |
-| `ingredients[].amount` | string | required |
-| `image` | file | optional, jpg/png/webp, max 4MB |
-
-> **Note:** For updates, all fields are optional (`sometimes`). Use `POST` with a `_method=PUT` field in the body when sending multipart/form-data.
 
 ---
 
@@ -230,17 +205,6 @@ Send as `multipart/form-data` when including an image, otherwise `application/js
 |--------|----------|:----:|-------------|
 | POST | `/api/recipes/{id}/like` | ✓ | Toggle like on/off |
 
-Response:
-
-```json
-{
-    "liked": true,
-    "likes_count": 55
-}
-```
-
-Calling the endpoint again toggles the like off: `"liked": false`.
-
 ---
 
 ### Favourites
@@ -249,14 +213,6 @@ Calling the endpoint again toggles the like off: `"liked": false`.
 |--------|----------|:----:|-------------|
 | POST | `/api/recipes/{id}/favourite` | ✓ | Toggle favourite on/off |
 | GET | `/api/favourites` | ✓ | List the authenticated user's saved recipes |
-
-Toggle response:
-
-```json
-{
-    "favourited": true
-}
-```
 
 ---
 
@@ -268,40 +224,50 @@ Toggle response:
 | POST | `/api/profile` | ✓ | Update name, email, bio, password, avatar |
 | GET | `/api/users/{id}` | | Public profile of any user |
 
-#### POST `/api/profile` — Update
+---
 
-All fields are optional. Send as `multipart/form-data` when uploading an avatar.
+## Subscription Tiers
 
-| Field | Type | Rules |
-|-------|------|-------|
-| `name` | string | min 2 |
-| `email` | string | must be unique |
-| `bio` | string | max 500 |
-| `password` | string | min 8, also send `password_confirmation` |
-| `avatar` | file | jpg/png/webp, max 2MB |
+### Free
+- Up to **10 published recipes**
+- 1 image per recipe
+- Public profile
+- Likes and favourites
+- Community browsing
+- AdSense-supported
+
+### Premium (€4.99/month or €39/year)
+- **Unlimited recipes**
+- Up to 5 images per recipe
+- Ad-free experience
+- Private / draft recipes
+- **Printable recipe cards (PDF export)**
+- Nutritional info + serving calculator *(coming soon)*
+- Priority support
 
 ---
 
-## Error Responses
+## Stripe Webhook Events
 
-| Status | Meaning |
-|--------|---------|
-| `401` | Unauthenticated — missing or invalid token |
-| `403` | Forbidden — authenticated but not the resource owner |
-| `404` | Resource not found |
-| `422` | Validation failed — response includes an `errors` object |
+The following events are handled by `WebhookController`:
 
-Validation error shape:
+| Event | Action |
+|-------|--------|
+| `customer.subscription.created` | Creates subscription record, activates Premium |
+| `customer.subscription.updated` | Updates subscription status |
+| `customer.subscription.deleted` | Marks subscription canceled |
+| `invoice.payment_succeeded` | Ensures status stays `active` after renewal |
+| `invoice.payment_failed` | Marks subscription `past_due` |
 
-```json
-{
-    "message": "Validation failed.",
-    "errors": {
-        "email": ["The email field is required."],
-        "password": ["The password must be at least 8 characters."]
-    }
-}
+### Local webhook testing
+
+```bash
+# Install Stripe CLI, then:
+stripe login
+stripe listen --forward-to http://localhost:8000/api/webhook/stripe
 ```
+
+Copy the printed `whsec_xxx` into your `.env` as `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
@@ -309,7 +275,12 @@ Validation error shape:
 
 ```
 users
-  id, name, email, password, avatar, bio, remember_token, timestamps
+  id, name, email, password, avatar, bio, stripe_customer_id,
+  remember_token, timestamps
+
+subscriptions
+  id, user_id (FK), stripe_id, stripe_customer_id, stripe_price_id,
+  status, ends_at, timestamps
 
 recipes
   id, user_id (FK), title, description, category, difficulty,
@@ -318,55 +289,74 @@ recipes
 
 likes
   id, user_id (FK), recipe_id (FK), created_at
-  UNIQUE (user_id, recipe_id)
 
 favourites
   id, user_id (FK), recipe_id (FK), created_at
-  UNIQUE (user_id, recipe_id)
 
 personal_access_tokens  (Sanctum)
 ```
 
 ---
 
-## Frontend Integration
+## Middleware
 
-In your Vue app, replace local fake-user logic with real API calls. A minimal authenticated fetch helper:
+| Alias | Class | Description |
+|-------|-------|-------------|
+| `premium` | `CheckPremium` | Returns 403 if user has no active subscription |
 
-```js
-const BASE = 'http://localhost:8000/api'
+Usage:
 
-async function apiFetch(path, options = {}) {
-    const token = localStorage.getItem('token')
-    const res = await fetch(`${BASE}/${path}`, {
-        ...options,
-        headers: {
-            'Accept': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...(options.headers ?? {}),
-        },
-    })
-    if (!res.ok) throw await res.json()
-    return res.json()
-}
+```php
+Route::middleware(['auth:sanctum', 'premium'])->group(function () {
+    Route::get('recipes/{recipe}/export-pdf', ...);
+});
+```
 
-// Login
-const { user, token } = await apiFetch('auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-})
-localStorage.setItem('token', token)
+---
 
-// Fetch recipes
-const { data, meta } = await apiFetch('recipes?category=pasta')
+## Environment Variables
 
-// Create a recipe with an image (multipart)
-const form = new FormData()
-form.append('title', 'My Recipe')
-form.append('image', file)
-// ...other fields
-await apiFetch('recipes', { method: 'POST', body: form })
+### Laravel (Railway)
+
+```env
+APP_KEY=
+APP_URL=https://api.recipe-sharing-platform.com
+
+DB_CONNECTION=mysql
+DB_HOST=
+DB_PORT=3306
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+
+FRONTEND_URL=https://recipe-sharing-platform.com
+
+SANCTUM_STATEFUL_DOMAINS=recipe-sharing-platform.com
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=auto
+AWS_BUCKET=recipe-sharing-platform-api
+AWS_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com
+AWS_PUBLIC_URL=https://pub-xxxx.r2.dev
+
+STRIPE_KEY=pk_test_xxx
+STRIPE_SECRET=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+SESSION_DRIVER=array
+```
+
+---
+
+## Local Development
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
 ```
 
 ---
