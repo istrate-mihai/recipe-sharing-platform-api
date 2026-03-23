@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecipeController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +17,6 @@ use Illuminate\Support\Facades\Route;
 | All routes here are prefixed with /api automatically by Laravel 11.
 |
 */
-
 // ── Authentication (public) ───────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -52,6 +53,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('profile', [ProfileController::class, 'show']);
     Route::post('profile', [ProfileController::class, 'update']); // POST for multipart avatar upload
+
+    // Get current plan status (called on app boot + after checkout success)
+    Route::get('/subscription', [SubscriptionController::class, 'status']);
+
+    // Start a Stripe Checkout session → returns { checkout_url }
+    Route::post('/subscribe', [SubscriptionController::class, 'checkout']);
+
+    // Open Stripe Billing Portal → returns { portal_url }
+    Route::post('/billing-portal', [SubscriptionController::class, 'billingPortal']);
 });
 
 Route::get('sitemap.xml', [RecipeController::class, 'sitemap']);
+
+// ── Public: Stripe webhook (NO auth — Stripe calls this directly) ─────────────
+Route::post('/webhook/stripe', [WebhookController::class, 'handle']);

@@ -13,9 +13,17 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
         health: '/up',
     )
+
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'premium' => \App\Http\Middleware\CheckPremium::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/webhook/stripe',
+        ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions) {
         // Always return JSON for API routes
         $exceptions->render(function (ValidationException $e, Request $request) {

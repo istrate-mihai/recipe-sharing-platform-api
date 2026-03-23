@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -17,6 +18,7 @@ class User extends Authenticatable
         'password',
         'avatar',
         'bio',
+        'stripe_customer_id',
     ];
 
     protected $hidden = [
@@ -47,5 +49,35 @@ class User extends Authenticatable
     public function favourites()
     {
         return $this->belongsToMany(Recipe::class, 'favourites')->withPivot('created_at');
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function isPremium(): bool
+    {
+        return $this->subscription?->isActive() ?? false;
+    }
+
+    public function plan(): string
+    {
+        return $this->isPremium() ? 'premium' : 'free';
+    }
+
+    public function remainingFreeRecipes(): ?int
+    {
+        if ($this->isPremium()) {
+            return null;
+        }
+
+        $used = $this->recipes()->count();
+        return max(0, 10 - $used);
+    }
+
+    public function hasStripeCustomer(): bool
+    {
+        return !is_null($this->stripe_customer_id);
     }
 }

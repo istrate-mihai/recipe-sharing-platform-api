@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -13,7 +12,6 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -35,4 +33,9 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
 ];
