@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class Recipe extends Model
 {
@@ -20,6 +22,7 @@ class Recipe extends Model
         'ingredients',
         'steps',
         'image',
+        'status',
     ];
 
     protected function casts(): array
@@ -30,6 +33,7 @@ class Recipe extends Model
             'prep_time'   => 'integer',
             'cook_time'   => 'integer',
             'likes_count' => 'integer',
+            'status'      => 'string',
         ];
     }
 
@@ -72,5 +76,21 @@ class Recipe extends Model
     {
         if (! $difficulty) return $query;
         return $query->where('difficulty', $difficulty);
+    }
+
+    public function scopeVisible(Builder $query): void
+    {
+        $query->where('status', 'published');
+    }
+
+    public function scopeVisibleTo(Builder $query, int $userId): void
+    {
+        $query->where(function ($q) use ($userId) {
+            $q->where('status', 'published')
+            ->orWhere(function ($q2) use ($userId) {
+                $q2->where('user_id', $userId)
+                    ->whereIn('status', ['draft', 'private']);
+            });
+        });
     }
 }

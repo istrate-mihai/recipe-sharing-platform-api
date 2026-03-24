@@ -46,6 +46,8 @@ class RecipeResource extends JsonResource
             'is_owner'       => $authUser
                                     ? $authUser->id === $this->user_id
                                     : false,
+
+            'status'         => $this->status,
         ];
     }
 }

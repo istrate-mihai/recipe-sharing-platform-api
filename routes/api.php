@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('premium')->group(function () {
         Route::get('recipes/{recipe}/export-pdf', [RecipeController::class, 'exportPdf']);
     });
+
+    Route::get('/my-recipes', [RecipeController::class, 'myRecipes']);
 });
 
 Route::get('sitemap.xml', [RecipeController::class, 'sitemap']);

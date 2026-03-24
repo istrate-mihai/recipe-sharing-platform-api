@@ -26,6 +26,9 @@ class RecipeController extends Controller
 
         $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy'])
             ->withCount('likedBy as likes_count')
+            ->when(
+                fn($q) => $q->visible()
+            )
             ->search($request->query('search'))
             ->category($request->query('category'))
             ->difficulty($request->query('difficulty'))
@@ -72,6 +75,12 @@ class RecipeController extends Controller
     public function show(Request $request, Recipe $recipe): JsonResponse
     {
         auth()->shouldUse('sanctum');
+
+        if ($recipe->status !== 'published') {
+            if (!auth()->check() || auth()->id() !== $recipe->user_id) {
+                return response()->json(['message' => 'Not found.'], 404);
+            }
+        }
 
         $recipe->loadCount('likedBy as likes_count');
         $recipe->load(['user', 'likedBy', 'favouritedBy']);
@@ -127,7 +136,7 @@ class RecipeController extends Controller
      */
     public function sitemap(): Response
     {
-        $recipes = Recipe::select('id', 'updated_at')->latest()->get();
+        $recipes = Recipe::select('id', 'updated_at')->visible()->latest()->get();
 
         $urls = '';
 
@@ -175,5 +184,22 @@ class RecipeController extends Controller
         $filename = \Str::slug($recipe->title) . ' ' . '-recipe-card.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * GET /api/my-recipes
+     * Auth required. Returns all recipes owned by the authenticated user.
+     */
+    public function myRecipes(Request $request): JsonResponse
+    {
+        $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy'])
+            ->withCount('likedBy as likes_count')
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => RecipeResource::collection($recipes),
+        ]);
     }
 }

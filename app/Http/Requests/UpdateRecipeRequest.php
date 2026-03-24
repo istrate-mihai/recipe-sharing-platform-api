@@ -27,6 +27,20 @@ class UpdateRecipeRequest extends FormRequest
             'ingredients.*.name'   => ['required_with:ingredients', 'string', 'min:1'],
             'ingredients.*.amount' => ['required_with:ingredients', 'string', 'min:1'],
             'image'                => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'status'               => 'sometimes|in:published,draft,private',
         ];
     }
+
+        public function after(): array
+        {
+            return [
+                function ($validator) {
+                    if (($this->input('status') ?? 'published') === 'private') {
+                        if (!$this->user()->isPremium()) {
+                            $validator->errors()->add('status', 'Private recipes are a Premium feature.');
+                        }
+                    }
+                }
+            ];
+        }
 }
