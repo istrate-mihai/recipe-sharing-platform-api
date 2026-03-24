@@ -13,7 +13,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Intervention\Image\Facades\Image;
 
 class RecipeController extends Controller
 {
@@ -179,25 +178,33 @@ class RecipeController extends Controller
     public function exportPdf(Recipe $recipe): Response
     {
         $recipe->load('user');
-
-        // Fetch image from R2 and encode as base64 for DomPDF
         $imageData = null;
+
         if ($recipe->image) {
             try {
-                // Get the original image from S3
-                $imageContents = Storage::disk('s3')->get($recipe->image);
-
-                // Resize the image to a maximum width of 800px, height auto, and compress
-                $img = Image::make($imageContents);
-                $img->resize(800, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->encode('jpg', 80); // compress to ~80% quality, jpeg
-
-                $imageData = 'data:image/jpeg;base64,' . base64_encode($img->getEncoded());
+                $contents = Storage::disk('s3')->get($recipe->image);
+                $img = imagecreatefromstring($contents);
+                if ($img) {
+                    // Resize to max width 800px while preserving aspect ratio
+                    $width = imagesx($img);
+                    $height = imagesy($img);
+                    $maxWidth = 800;
+                    if ($width > $maxWidth) {
+                        $newWidth = $maxWidth;
+                        $newHeight = intval($height * $maxWidth / $width);
+                        $resized = imagecreatetruecolor($newWidth, $newHeight);
+                        imagecopyresampled($resized, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        imagedestroy($img);
+                        $img = $resized;
+                    }
+                    // Convert to JPEG with 80% quality
+                    ob_start();
+                    imagejpeg($img, null, 80);
+                    $imageData = 'data:image/jpeg;base64,' . base64_encode(ob_get_clean());
+                    imagedestroy($img);
+                }
             } catch (\Exception $e) {
                 \Log::error('Image processing failed: ' . $e->getMessage());
-                $imageData = null;
             }
         }
 
@@ -206,9 +213,7 @@ class RecipeController extends Controller
             'imageData' => $imageData,
         ])->setPaper('a4', 'portrait');
 
-        $filename = \Str::slug($recipe->title) . '-recipe-card.pdf';
-
-        return $pdf->download($filename);
+        return $pdf->download(\Str::slug($recipe->title) . '-recipe-card.pdf');
     }
 
     /**
