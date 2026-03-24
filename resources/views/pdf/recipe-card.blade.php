@@ -98,11 +98,13 @@
             border: 1px solid #e8d9b5;
             border-radius: 4px;
             padding: 4px;
+            max-width: 500px;
+            max-height: 500px;
         }
 
         .recipe-image {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 100%;
             width: auto;
             height: auto;
             display: block;
