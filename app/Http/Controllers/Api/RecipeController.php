@@ -13,6 +13,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Intervention\Image\Facades\Image;
 
 class RecipeController extends Controller
 {
@@ -183,10 +184,19 @@ class RecipeController extends Controller
         $imageData = null;
         if ($recipe->image) {
             try {
-                $contents = Storage::disk('s3')->get($recipe->image);
-                $mimeType = Storage::disk('s3')->mimeType($recipe->image);
-                $imageData = 'data:' . $mimeType . ';base64,' . base64_encode($contents);
+                // Get the original image from S3
+                $imageContents = Storage::disk('s3')->get($recipe->image);
+
+                // Resize the image to a maximum width of 800px, height auto, and compress
+                $img = Image::make($imageContents);
+                $img->resize(800, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $img->encode('jpg', 80); // compress to ~80% quality, jpeg
+
+                $imageData = 'data:image/jpeg;base64,' . base64_encode($img->getEncoded());
             } catch (\Exception $e) {
+                \Log::error('Image processing failed: ' . $e->getMessage());
                 $imageData = null;
             }
         }

@@ -87,19 +87,20 @@
             word-wrap: break-word;
         }
 
-        /* Image container with fixed height (to mimic object-fit: cover) */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
-            height: 280px;
-            overflow: hidden;
             border: 1px solid #e8d9b5;
             border-radius: 4px;
+            padding: 4px;
         }
         .recipe-image {
-            width: 100%;
+            max-width: 100%;
+            max-height: 300px;
+            width: auto;
             height: auto;
             display: block;
+            margin: 0 auto;
         }
 
         /* Two‑column flex layout */
