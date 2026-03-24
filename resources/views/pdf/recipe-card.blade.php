@@ -103,7 +103,7 @@
         }
 
         .recipe-image {
-            max-width: 100%;
+            max-width: 500px;
             max-height: 500px;
             width: auto;
             height: auto;
