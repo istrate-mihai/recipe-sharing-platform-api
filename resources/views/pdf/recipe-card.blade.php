@@ -272,10 +272,11 @@
             <!-- Description -->
             <div class="description">{{ $recipe->description }}</div>
 
-            <!-- Image container – uses a placeholder image (you can replace with any image URL) -->
-            <div class="recipe-image-wrap">
-                <img src="1.jpg" class="recipe-image" alt="Eggs Benedict">
-            </div>
+            @if($imageData)
+                <div class="recipe-image-wrap">
+                    <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
+                </div>
+            @endif
 
             <!-- Two‑column flex layout -->
             <div class="two-columns">
