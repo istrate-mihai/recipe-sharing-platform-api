@@ -175,13 +175,28 @@ class RecipeController extends Controller
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
-    public function exportPdf(Recipe $recipe): Response {
+    public function exportPdf(Recipe $recipe): Response
+    {
         $recipe->load('user');
 
-        $pdf = Pdf::loadView('pdf.recipe-card', ['recipe' => $recipe])
-            ->setPaper('a4', 'portrait');
+        // Fetch image from R2 and encode as base64 for DomPDF
+        $imageData = null;
+        if ($recipe->image) {
+            try {
+                $contents = Storage::disk('s3')->get($recipe->image);
+                $mimeType = Storage::disk('s3')->mimeType($recipe->image);
+                $imageData = 'data:' . $mimeType . ';base64,' . base64_encode($contents);
+            } catch (\Exception $e) {
+                $imageData = null;
+            }
+        }
 
-        $filename = \Str::slug($recipe->title) . ' ' . '-recipe-card.pdf';
+        $pdf = Pdf::loadView('pdf.recipe-card', [
+            'recipe'    => $recipe,
+            'imageData' => $imageData,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = \Str::slug($recipe->title) . '-recipe-card.pdf';
 
         return $pdf->download($filename);
     }
