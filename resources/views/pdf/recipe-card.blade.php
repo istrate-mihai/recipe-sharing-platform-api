@@ -94,7 +94,7 @@
 
         .recipe-image-wrap {
             text-align: center;
-            margin: auto 20px;
+            margin: 0 auto;;
             border: 1px solid #e8d9b5;
             border-radius: 4px;
             padding: 4px;
