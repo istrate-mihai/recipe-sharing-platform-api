@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Recipe Card Test (Final PDF version)</title>
+    <title>{{ $recipe->title }}</title>
     <style>
         * {
             margin: 0;
@@ -17,16 +18,16 @@
             font-size: 12px;
             line-height: 1.5;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
 
-        /* Simulate the PDF page wrapper */
+        /* PDF page wrapper – provides margins and border */
         .pdf-page {
-            max-width: 210mm;
-            margin: 0 auto;
             background: #fdf6e3;
             border: 3px double #c9a84c;
             padding: 32px 40px;
+            margin: 0;
+            width: 100%;
         }
 
         .page-content {
@@ -42,6 +43,7 @@
             padding-bottom: 12px;
             margin-bottom: 12px;
         }
+
         .platform-name {
             font-size: 10px;
             letter-spacing: 3px;
@@ -49,6 +51,7 @@
             color: #a08060;
             margin-bottom: 4px;
         }
+
         .recipe-title {
             font-size: 24px;
             font-weight: bold;
@@ -56,11 +59,13 @@
             line-height: 1.2;
             margin-bottom: 4px;
         }
+
         .recipe-meta {
             font-size: 11px;
             color: #7a6045;
             letter-spacing: 1px;
         }
+
         .recipe-meta span {
             margin: 0 4px;
         }
@@ -87,6 +92,7 @@
             word-wrap: break-word;
         }
 
+        /* Image container */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
@@ -94,11 +100,15 @@
             border-radius: 4px;
             padding: 4px;
         }
+
+        /* Image fills the container width, respects max-height */
         .recipe-image {
-            max-width: 100%;
-            max-height: 300px;
-            width: auto;
+            width: 100%;
             height: auto;
+            max-height: 300px;
+            /* you can remove this if you want full height */
+            object-fit: contain;
+            /* keeps aspect ratio, fits inside the max-height */
             display: block;
             margin: 0 auto;
         }
@@ -110,12 +120,16 @@
             gap: 20px;
             margin-top: 4px;
         }
+
         .col-left {
-            flex: 1.2;   /* about 36% */
+            flex: 1.2;
+            /* about 36% */
             min-width: 0;
         }
+
         .col-right {
-            flex: 2;     /* about 64% */
+            flex: 2;
+            /* about 64% */
             min-width: 0;
         }
 
@@ -130,6 +144,7 @@
             margin-bottom: 10px;
             margin-top: 12px;
         }
+
         .col-left .section-title:first-of-type {
             margin-top: 0;
         }
@@ -140,6 +155,7 @@
             margin-bottom: 16px;
             gap: 1px;
         }
+
         .time-box {
             flex: 1;
             text-align: center;
@@ -147,12 +163,14 @@
             border: 1px solid #e8d9b5;
             background: #f5efe0;
         }
+
         .time-value {
             font-size: 15px;
             font-weight: bold;
             color: #3b2a1a;
             display: block;
         }
+
         .time-label {
             font-size: 9px;
             letter-spacing: 1px;
@@ -164,6 +182,7 @@
         .badges {
             margin-bottom: 16px;
         }
+
         .badge {
             display: inline-block;
             background: #f0e6cc;
@@ -177,11 +196,12 @@
             margin-right: 4px;
         }
 
-        /* Ingredient list */
+        /* Ingredient list – name left, amount right */
         .ingredient-list {
             list-style: none;
             margin-bottom: 16px;
         }
+
         .ingredient-list li {
             padding: 4px 0;
             border-bottom: 1px dotted #e8d9b5;
@@ -190,18 +210,23 @@
             justify-content: space-between;
             flex-wrap: wrap;
         }
+
         .ing-name {
             color: #3b2a1a;
+            text-align: left;
         }
+
         .ing-amount {
             color: #7a6045;
             font-style: italic;
+            text-align: right;
         }
 
         /* Steps list */
         .steps-list {
             list-style: none;
         }
+
         .step-item {
             display: flex;
             gap: 10px;
@@ -209,6 +234,7 @@
             font-size: 12px;
             page-break-inside: avoid;
         }
+
         .step-num {
             flex-shrink: 0;
             width: 20px;
@@ -223,6 +249,7 @@
             font-weight: bold;
             margin-top: 2px;
         }
+
         .step-text {
             color: #3b2a1a;
             line-height: 1.5;
@@ -240,6 +267,7 @@
             color: #a08060;
             letter-spacing: 1px;
         }
+
         .ornament {
             color: #c9a84c;
             font-size: 14px;
@@ -248,11 +276,17 @@
         }
 
         /* Keep important blocks together */
-        .header, .author, .description, .recipe-image-wrap, .two-columns, .footer {
+        .header,
+        .author,
+        .description,
+        .recipe-image-wrap,
+        .two-columns,
+        .footer {
             page-break-inside: avoid;
         }
     </style>
 </head>
+
 <body>
     <div class="pdf-page">
         <div class="page-content">
@@ -273,9 +307,15 @@
             <!-- Description -->
             <div class="description">{{ $recipe->description }}</div>
 
+            <!-- Image with placeholder fallback -->
             @if($imageData)
                 <div class="recipe-image-wrap">
                     <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
+                </div>
+            @else
+                <div class="recipe-image-wrap">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23f0e6cc'/%3E%3Ctext x='400' y='200' font-family='Georgia' font-size='24' fill='%237a6045' text-anchor='middle'%3ENo Image Available%3C/text%3E%3C/svg%3E"
+                        class="recipe-image" alt="No image available">
                 </div>
             @endif
 
@@ -338,5 +378,5 @@
         </div>
     </div>
 </body>
-</html>
 
+</html>

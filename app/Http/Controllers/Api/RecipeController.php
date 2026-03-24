@@ -178,7 +178,7 @@ class RecipeController extends Controller
     public function exportPdf(Recipe $recipe): Response
     {
         $recipe->load('user');
-    
+
         $imageData = null;
         if ($recipe->image) {
             try {
@@ -190,12 +190,12 @@ class RecipeController extends Controller
                 \Log::error('Failed to fetch recipe image: ' . $e->getMessage());
             }
         }
-    
+
         $pdf = Pdf::loadView('pdf.recipe-card', [
             'recipe'    => $recipe,
             'imageData' => $imageData,
         ])->setPaper('a4', 'portrait');
-    
+
         return $pdf->download(\Str::slug($recipe->title) . '-recipe-card.pdf');
     }
 
