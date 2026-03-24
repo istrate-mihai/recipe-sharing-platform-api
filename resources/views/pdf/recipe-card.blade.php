@@ -98,11 +98,8 @@
 
         .recipe-image {
             width: 100%;
-            /* fill the container horizontally */
             max-height: 280px;
-            /* keep the height you liked */
-            object-fit: contain;
-            /* preserve aspect ratio, no cropping */
+            object-fit: cover;
             border: 1px solid #e8d9b5;
             border-radius: 4px;
         }
@@ -112,7 +109,6 @@
             display: table;
             width: 100%;
             table-layout: fixed;
-            /* forces columns to honour fixed widths */
             margin-top: 4px;
         }
 
@@ -210,7 +206,6 @@
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            page-break-inside: avoid;
         }
 
         .ing-name {
@@ -232,7 +227,6 @@
             gap: 10px;
             margin-bottom: 12px;
             font-size: 12px;
-            page-break-inside: avoid;
         }
 
         .step-num {
@@ -274,26 +268,6 @@
             display: block;
             margin-bottom: 3px;
         }
-
-        /* Page break control */
-        .header,
-        .author,
-        .description,
-        .recipe-image-wrap,
-        .footer {
-            page-break-inside: avoid;
-        }
-
-        /* Allow the two‑column block to break across pages if needed */
-        .two-columns {
-            page-break-inside: auto;
-        }
-
-        /* Keep individual rows together */
-        .ingredient-list li,
-        .step-item {
-            page-break-inside: avoid;
-        }
     </style>
 </head>
 
@@ -316,10 +290,10 @@
         <!-- Description -->
         <div class="description">{{ $recipe->description }}</div>
 
-        <!-- Image (wider, height‑constrained) -->
+        <!-- Image (if exists) -->
         @if($imageData)
             <div class="recipe-image-wrap">
-                <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}" />
+                <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
             </div>
         @endif
 
