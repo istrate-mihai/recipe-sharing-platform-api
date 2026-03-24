@@ -104,7 +104,7 @@
 
         .recipe-image {
             max-width: 100%;
-            max-height: 100%;
+            max-height: 500px;
             width: auto;
             height: auto;
             display: block;
@@ -244,6 +244,7 @@
             font-size: 9px;
             font-weight: bold;
             margin-top: 2px;
+            text-align: center;
         }
 
         .step-text {
