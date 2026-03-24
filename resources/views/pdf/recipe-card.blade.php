@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Recipe Card Test (Final PDF version)</title>
+    <title>{{ $recipe->title }}</title>
     <style>
         * {
             margin: 0;
@@ -17,16 +17,16 @@
             font-size: 12px;
             line-height: 1.5;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
 
-        /* Simulate the PDF page wrapper */
+        /* PDF wrapper – reliable margins and border */
         .pdf-page {
-            max-width: 210mm;
-            margin: 0 auto;
             background: #fdf6e3;
             border: 3px double #c9a84c;
             padding: 32px 40px;
+            margin: 0;
+            width: 100%;
         }
 
         .page-content {
@@ -87,7 +87,7 @@
             word-wrap: break-word;
         }
 
-        /* Image container with fixed height (to mimic object-fit: cover) */
+        /* Image – fixed height container (mimics object-fit: cover) */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
@@ -110,15 +110,15 @@
             margin-top: 4px;
         }
         .col-left {
-            flex: 1.2;   /* about 36% */
+            flex: 1.2;   /* ~36% */
             min-width: 0;
         }
         .col-right {
-            flex: 2;     /* about 64% */
+            flex: 2;     /* ~64% */
             min-width: 0;
         }
 
-        /* Section heading */
+        /* Section headings */
         .section-title {
             font-size: 10px;
             letter-spacing: 3px;
@@ -258,99 +258,74 @@
             <!-- Header -->
             <div class="header">
                 <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
-                <div class="recipe-title">Eggs Benedict</div>
+                <div class="recipe-title">{{ $recipe->title }}</div>
                 <div class="recipe-meta">
-                    <span>Breakfast</span> ·
-                    <span>Medium</span> ·
-                    <span>Prep 20 min</span> ·
-                    <span>Cook 20 min</span>
+                    <span>{{ ucfirst($recipe->category) }}</span> ·
+                    <span>{{ ucfirst($recipe->difficulty) }}</span> ·
+                    <span>Prep {{ $recipe->prep_time }} min</span> ·
+                    <span>Cook {{ $recipe->cook_time }} min</span>
                 </div>
             </div>
 
-            <div class="author">by Chef Mihai</div>
+            <div class="author">by {{ $recipe->user->name }}</div>
 
             <!-- Description -->
-            <div class="description">
-                The most demanding breakfast on any menu, and entirely achievable at home if you approach it methodically.
-                The hollandaise is made first and kept warm. The Canadian bacon is crisped in a pan. The muffins are toasted.
-                Then, and only then, do you poach the eggs — one at a time, into gently swirling water with a splash of vinegar.
-                Everything waits for the egg. The hollandaise is the test of the cook.
-            </div>
+            <div class="description">{{ $recipe->description }}</div>
 
-            <!-- Image container – uses a placeholder image (you can replace with any image URL) -->
-            <div class="recipe-image-wrap">
-                <img src="1.jpg" class="recipe-image" alt="Eggs Benedict">
-            </div>
+            <!-- Image (if exists) -->
+            @if($imageData)
+                <div class="recipe-image-wrap">
+                    <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
+                </div>
+            @endif
 
-            <!-- Two‑column flex layout -->
+            <!-- Two‑column layout -->
             <div class="two-columns">
                 <!-- Left column -->
                 <div class="col-left">
                     <div class="section-title">Time</div>
                     <div class="time-boxes">
                         <div class="time-box">
-                            <span class="time-value">20</span>
+                            <span class="time-value">{{ $recipe->prep_time }}</span>
                             <span class="time-label">Prep (min)</span>
                         </div>
                         <div class="time-box">
-                            <span class="time-value">20</span>
+                            <span class="time-value">{{ $recipe->cook_time }}</span>
                             <span class="time-label">Cook (min)</span>
                         </div>
                         <div class="time-box">
-                            <span class="time-value">40</span>
+                            <span class="time-value">{{ $recipe->prep_time + $recipe->cook_time }}</span>
                             <span class="time-label">Total (min)</span>
                         </div>
                     </div>
 
                     <div class="section-title">Details</div>
                     <div class="badges">
-                        <span class="badge">Breakfast</span>
-                        <span class="badge">Medium</span>
+                        <span class="badge">{{ $recipe->category }}</span>
+                        <span class="badge">{{ $recipe->difficulty }}</span>
                     </div>
 
                     <div class="section-title">Ingredients</div>
                     <ul class="ingredient-list">
-                        <li><span class="ing-name">English muffins, split</span><span class="ing-amount">4</span></li>
-                        <li><span class="ing-name">Canadian bacon or thick-cut ham slices</span><span class="ing-amount">8</span></li>
-                        <li><span class="ing-name">eggs, for poaching</span><span class="ing-amount">8</span></li>
-                        <li><span class="ing-name">white wine vinegar</span><span class="ing-amount">2 tbsp</span></li>
-                        <li><span class="ing-name">egg yolks, for hollandaise</span><span class="ing-amount">4</span></li>
-                        <li><span class="ing-name">unsalted butter, clarified or melted</span><span class="ing-amount">200g</span></li>
-                        <li><span class="ing-name">lemon juice</span><span class="ing-amount">1 tbsp</span></li>
-                        <li><span class="ing-name">cold water</span><span class="ing-amount">1 tbsp</span></li>
-                        <li><span class="ing-name">cayenne pepper</span><span class="ing-amount">pinch</span></li>
-                        <li><span class="ing-name">salt and white pepper</span><span class="ing-amount">to taste</span></li>
+                        @foreach($recipe->ingredients as $ingredient)
+                            <li>
+                                <span class="ing-name">{{ $ingredient['name'] }}</span>
+                                <span class="ing-amount">{{ $ingredient['amount'] }}</span>
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
 
-                <!-- Right column (Method) -->
+                <!-- Right column -->
                 <div class="col-right">
                     <div class="section-title">Method</div>
                     <ol class="steps-list">
-                        <li class="step-item">
-                            <span class="step-num">1</span>
-                            <span class="step-text">Make the hollandaise: place egg yolks and cold water in a heatproof bowl over a pot of barely simmering water. Whisk constantly until the mixture thickens and doubles in volume, about 3–4 minutes. The whisk should leave trails.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">2</span>
-                            <span class="step-text">Remove from heat. Very slowly drizzle in the warm clarified butter, whisking constantly, until you have a thick, glossy sauce. Add lemon juice, cayenne, salt, and white pepper. Keep warm over the hot water, off the heat, whisking occasionally.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">3</span>
-                            <span class="step-text">Cook the Canadian bacon in a dry pan over medium-high heat for 2 minutes per side until lightly crisped. Set aside and keep warm.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">4</span>
-                            <span class="step-text">Toast the English muffin halves until golden and slightly crispy.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">5</span>
-                            <span class="step-text">Bring a wide, deep pan of water to a gentle simmer — you want small bubbles, not a rolling boil. Add white wine vinegar.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">6</span>
-                            <span class="step-text">Crack each egg into a small cup. Swirl the water gently with a spoon to create a slow vortex. Slide the egg into the centre. Poach for exactly 3 minutes for a runny yolk. Remove with a slotted spoon and drain on a cloth.</span>
-                        </li>
+                        @foreach($recipe->steps as $index => $step)
+                            <li class="step-item">
+                                <span class="step-num">{{ $index + 1 }}</span>
+                                <span class="step-text">{{ $step }}</span>
+                            </li>
+                        @endforeach
                     </ol>
                 </div>
             </div>
