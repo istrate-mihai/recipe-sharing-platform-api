@@ -270,12 +270,7 @@
             <div class="author">by {{ $recipe->user->name }}</div>
 
             <!-- Description -->
-            <div class="description">
-                The most demanding breakfast on any menu, and entirely achievable at home if you approach it methodically. 
-                The hollandaise is made first and kept warm. The Canadian bacon is crisped in a pan. The muffins are toasted. 
-                Then, and only then, do you poach the eggs — one at a time, into gently swirling water with a splash of vinegar. 
-                Everything waits for the egg. The hollandaise is the test of the cook.
-            </div>
+            <div class="description">{{ $recipe->description }}</div>
 
             <!-- Image container – uses a placeholder image (you can replace with any image URL) -->
             <div class="recipe-image-wrap">
@@ -289,23 +284,23 @@
                     <div class="section-title">Time</div>
                     <div class="time-boxes">
                         <div class="time-box">
-                            <span class="time-value">20</span>
+                            <span class="time-value">{{ $recipe->prep_time }}</span>
                             <span class="time-label">Prep (min)</span>
                         </div>
                         <div class="time-box">
-                            <span class="time-value">20</span>
+                            <span class="time-value">{{ $recipe->cook_time }}</span>
                             <span class="time-label">Cook (min)</span>
                         </div>
                         <div class="time-box">
-                            <span class="time-value">40</span>
+                            <span class="time-value">{{ $recipe->prep_time + $recipe->cook_time }}</span>
                             <span class="time-label">Total (min)</span>
                         </div>
                     </div>
 
                     <div class="section-title">Details</div>
                     <div class="badges">
-                        <span class="badge">Breakfast</span>
-                        <span class="badge">Medium</span>
+                        <span class="badge">{{ $recipe->category }}</span>
+                        <span class="badge">{{ $recipe->difficulty }}</span>
                     </div>
 
                     <div class="section-title">Ingredients</div>
