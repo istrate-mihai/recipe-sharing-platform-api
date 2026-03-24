@@ -10,6 +10,12 @@ class RecipeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+
+        if (is_array($this->resource)) {
+            \Log::error('RecipeResource received array instead of model', ['resource' => $this->resource]);
+            throw new \Exception('RecipeResource received plain array: ' . json_encode($this->resource));
+        }
+
         $authUser = $request->user();
 
         return [
@@ -20,7 +26,6 @@ class RecipeResource extends JsonResource
             'difficulty'  => $this->difficulty,
             'prep_time'   => $this->prep_time,
             'cook_time'   => $this->cook_time,
-            'ingredients' => $this->ingredients,
             'steps'       => $this->steps,
             'image_url'   => $this->image
                                 ? rtrim(env('AWS_PUBLIC_URL'), '/') . '/' . $this->image
@@ -48,6 +53,10 @@ class RecipeResource extends JsonResource
                                     : false,
 
             'status'         => $this->status,
+
+            'servings'    => $this->servings,
+
+            'ingredients' => IngredientResource::collection($this->whenLoaded('ingredients')),
         ];
     }
 }

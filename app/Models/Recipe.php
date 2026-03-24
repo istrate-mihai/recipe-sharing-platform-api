@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class Recipe extends Model
 {
@@ -19,21 +18,21 @@ class Recipe extends Model
         'difficulty',
         'prep_time',
         'cook_time',
-        'ingredients',
         'steps',
         'image',
         'status',
+        'servings',
     ];
 
     protected function casts(): array
     {
         return [
-            'ingredients' => 'array',
             'steps'       => 'array',
             'prep_time'   => 'integer',
             'cook_time'   => 'integer',
             'likes_count' => 'integer',
             'status'      => 'string',
+            'servings'    => 'integer',
         ];
     }
 
@@ -52,6 +51,11 @@ class Recipe extends Model
     public function favouritedBy()
     {
         return $this->belongsToMany(User::class, 'favourites')->withPivot('created_at');
+    }
+
+    public function ingredients()
+    {
+        return $this->hasMany(Ingredient::class)->orderBy('order');
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────

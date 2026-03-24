@@ -26,10 +26,11 @@ class StoreRecipeRequest extends FormRequest
             'steps'                    => ['required', 'array', 'min:1'],
             'steps.*'                  => ['required', 'string', 'min:1'],
 
-            // Ingredients: at least 1 object with name + amount
+            'servings'                 => ['nullable', 'integer', 'min:1', 'max:100'],
             'ingredients'              => ['required', 'array', 'min:1'],
-            'ingredients.*.name'       => ['required', 'string', 'min:1'],
-            'ingredients.*.amount'     => ['required', 'string', 'min:1'],
+            'ingredients.*.name'       => ['required', 'string', 'min:1', 'max:255'],
+            'ingredients.*.quantity'   => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'ingredients.*.unit'       => ['nullable', 'string', 'max:50'],
 
             // Optional image upload
             'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

@@ -24,7 +24,7 @@ class RecipeController extends Controller
     {
         auth()->shouldUse('sanctum');
 
-        $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy'])
+        $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy', 'ingredients'])
             ->withCount('likedBy as likes_count')
             ->when(
                 fn($q) => $q->visible()
@@ -36,7 +36,7 @@ class RecipeController extends Controller
             ->paginate($request->query('per_page', 10));
 
         return response()->json([
-            'data' => RecipeResource::collection($recipes->items()),
+            'data' => RecipeResource::collection($recipes->getCollection()),
             'meta' => [
                 'current_page' => $recipes->currentPage(),
                 'last_page'    => $recipes->lastPage(),
@@ -63,7 +63,19 @@ class RecipeController extends Controller
         }
 
         $recipe = $request->user()->recipes()->create($data);
-        $recipe->load(['user', 'likedBy', 'favouritedBy']);
+
+        if (!empty($data['ingredients'])) {
+            collect($data['ingredients'])->each(function ($ing, $i) use ($recipe) {
+                $recipe->ingredients()->create([
+                    'quantity' => $ing['quantity'] ?? null,
+                    'unit'     => $ing['unit'] ?? null,
+                    'name'     => $ing['name'],
+                    'order'    => $i,
+                ]);
+            });
+        }
+
+        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
 
         return response()->json(new RecipeResource($recipe), 201);
     }
@@ -83,7 +95,8 @@ class RecipeController extends Controller
         }
 
         $recipe->loadCount('likedBy as likes_count');
-        $recipe->load(['user', 'likedBy', 'favouritedBy']);
+
+        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
 
         return response()->json(new RecipeResource($recipe));
     }
@@ -107,7 +120,20 @@ class RecipeController extends Controller
         }
 
         $recipe->update($data);
-        $recipe->load(['user', 'likedBy', 'favouritedBy']);
+
+        if (isset($data['ingredients'])) {
+            $recipe->ingredients()->delete();
+            collect($data['ingredients'])->each(function ($ing, $i) use ($recipe) {
+                $recipe->ingredients()->create([
+                    'quantity' => $ing['quantity'] ?? null,
+                    'unit'     => $ing['unit'] ?? null,
+                    'name'     => $ing['name'],
+                    'order'    => $i,
+                ]);
+            });
+        }
+
+        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
 
         return response()->json(new RecipeResource($recipe));
     }
