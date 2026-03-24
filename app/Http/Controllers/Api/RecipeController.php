@@ -175,45 +175,55 @@ class RecipeController extends Controller
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
-    public function exportPdf(Recipe $recipe): Response
+    public function getImageData(Recipe $recipe): string
     {
-        $recipe->load('user');
-        $imageData = null;
-
-        if ($recipe->image) {
+        // Placeholder SVG (light beige box with text)
+        $placeholder = 'data:image/svg+xml;base64,' . base64_encode('
+            <svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+                <rect width="800" height="400" fill="#f0e6cc"/>
+                <text x="400" y="200" font-family="Georgia" font-size="24" fill="#7a6045" text-anchor="middle">No Image Available</text>
+            </svg>
+        ');
+    
+        if (!$recipe->image) {
+            return $placeholder;
+        }
+    
+        try {
+            $contents = Storage::disk('s3')->get($recipe->image);
+            $mimeType = Storage::disk('s3')->mimeType($recipe->image);
+    
+            // Try to resize and convert to JPEG (reduces size, prevents oversized PDFs)
             try {
-                $contents = Storage::disk('s3')->get($recipe->image);
                 $img = imagecreatefromstring($contents);
                 if ($img) {
-                    // Resize to max width 800px while preserving aspect ratio
                     $width = imagesx($img);
                     $height = imagesy($img);
                     $maxWidth = 800;
                     if ($width > $maxWidth) {
                         $newWidth = $maxWidth;
-                        $newHeight = intval($height * $maxWidth / $width);
+                        $newHeight = (int)($height * $maxWidth / $width);
                         $resized = imagecreatetruecolor($newWidth, $newHeight);
                         imagecopyresampled($resized, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                         imagedestroy($img);
                         $img = $resized;
                     }
-                    // Convert to JPEG with 80% quality
                     ob_start();
                     imagejpeg($img, null, 80);
-                    $imageData = 'data:image/jpeg;base64,' . base64_encode(ob_get_clean());
+                    $jpegData = ob_get_clean();
                     imagedestroy($img);
+                    return 'data:image/jpeg;base64,' . base64_encode($jpegData);
                 }
             } catch (\Exception $e) {
-                \Log::error('Image processing failed: ' . $e->getMessage());
+                // If conversion fails, fall back to original image
             }
+    
+            // If we reach here, conversion didn't happen (or failed) – use original
+            return 'data:' . $mimeType . ';base64,' . base64_encode($contents);
+        } catch (\Exception $e) {
+            \Log::error('Image fetch failed: ' . $e->getMessage());
+            return $placeholder;
         }
-
-        $pdf = Pdf::loadView('pdf.recipe-card', [
-            'recipe'    => $recipe,
-            'imageData' => $imageData,
-        ])->setPaper('a4', 'portrait');
-
-        return $pdf->download(\Str::slug($recipe->title) . '-recipe-card.pdf');
     }
 
     /**
