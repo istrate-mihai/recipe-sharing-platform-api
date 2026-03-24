@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>{{ $recipe->title }}</title>
@@ -43,7 +42,6 @@
             padding-bottom: 12px;
             margin-bottom: 12px;
         }
-
         .platform-name {
             font-size: 10px;
             letter-spacing: 3px;
@@ -51,7 +49,6 @@
             color: #a08060;
             margin-bottom: 4px;
         }
-
         .recipe-title {
             font-size: 24px;
             font-weight: bold;
@@ -59,13 +56,11 @@
             line-height: 1.2;
             margin-bottom: 4px;
         }
-
         .recipe-meta {
             font-size: 11px;
             color: #7a6045;
             letter-spacing: 1px;
         }
-
         .recipe-meta span {
             margin: 0 4px;
         }
@@ -100,15 +95,12 @@
             border-radius: 4px;
             padding: 4px;
         }
-
         /* Image fills the container width, respects max-height */
         .recipe-image {
             width: 100%;
             height: auto;
-            max-height: 300px;
-            /* you can remove this if you want full height */
-            object-fit: contain;
-            /* keeps aspect ratio, fits inside the max-height */
+            max-height: 300px;   /* you can remove this if you want full height */
+            object-fit: contain; /* keeps aspect ratio, fits inside the max-height */
             display: block;
             margin: 0 auto;
         }
@@ -120,16 +112,12 @@
             gap: 20px;
             margin-top: 4px;
         }
-
         .col-left {
-            flex: 1.2;
-            /* about 36% */
+            flex: 1.2;   /* about 36% */
             min-width: 0;
         }
-
         .col-right {
-            flex: 2;
-            /* about 64% */
+            flex: 2;     /* about 64% */
             min-width: 0;
         }
 
@@ -144,7 +132,6 @@
             margin-bottom: 10px;
             margin-top: 12px;
         }
-
         .col-left .section-title:first-of-type {
             margin-top: 0;
         }
@@ -155,7 +142,6 @@
             margin-bottom: 16px;
             gap: 1px;
         }
-
         .time-box {
             flex: 1;
             text-align: center;
@@ -163,14 +149,12 @@
             border: 1px solid #e8d9b5;
             background: #f5efe0;
         }
-
         .time-value {
             font-size: 15px;
             font-weight: bold;
             color: #3b2a1a;
             display: block;
         }
-
         .time-label {
             font-size: 9px;
             letter-spacing: 1px;
@@ -182,7 +166,6 @@
         .badges {
             margin-bottom: 16px;
         }
-
         .badge {
             display: inline-block;
             background: #f0e6cc;
@@ -201,7 +184,6 @@
             list-style: none;
             margin-bottom: 16px;
         }
-
         .ingredient-list li {
             padding: 4px 0;
             border-bottom: 1px dotted #e8d9b5;
@@ -210,12 +192,10 @@
             justify-content: space-between;
             flex-wrap: wrap;
         }
-
         .ing-name {
             color: #3b2a1a;
             text-align: left;
         }
-
         .ing-amount {
             color: #7a6045;
             font-style: italic;
@@ -226,7 +206,6 @@
         .steps-list {
             list-style: none;
         }
-
         .step-item {
             display: flex;
             gap: 10px;
@@ -234,7 +213,6 @@
             font-size: 12px;
             page-break-inside: avoid;
         }
-
         .step-num {
             flex-shrink: 0;
             width: 20px;
@@ -249,7 +227,6 @@
             font-weight: bold;
             margin-top: 2px;
         }
-
         .step-text {
             color: #3b2a1a;
             line-height: 1.5;
@@ -267,7 +244,6 @@
             color: #a08060;
             letter-spacing: 1px;
         }
-
         .ornament {
             color: #c9a84c;
             font-size: 14px;
@@ -276,17 +252,11 @@
         }
 
         /* Keep important blocks together */
-        .header,
-        .author,
-        .description,
-        .recipe-image-wrap,
-        .two-columns,
-        .footer {
+        .header, .author, .description, .recipe-image-wrap, .two-columns, .footer {
             page-break-inside: avoid;
         }
     </style>
 </head>
-
 <body>
     <div class="pdf-page">
         <div class="page-content">
@@ -314,8 +284,7 @@
                 </div>
             @else
                 <div class="recipe-image-wrap">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23f0e6cc'/%3E%3Ctext x='400' y='200' font-family='Georgia' font-size='24' fill='%237a6045' text-anchor='middle'%3ENo Image Available%3C/text%3E%3C/svg%3E"
-                        class="recipe-image" alt="No image available">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23f0e6cc'/%3E%3Ctext x='400' y='200' font-family='Georgia' font-size='24' fill='%237a6045' text-anchor='middle'%3ENo Image Available%3C/text%3E%3C/svg%3E" class="recipe-image" alt="No image available">
                 </div>
             @endif
 
@@ -378,5 +347,4 @@
         </div>
     </div>
 </body>
-
 </html>
