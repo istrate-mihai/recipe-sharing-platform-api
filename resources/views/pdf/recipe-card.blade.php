@@ -27,7 +27,7 @@
             border: 3px double #c9a84c;
         }
 
-        /* Main container – ensures content fits inside the page margins */
+        /* Main container – ensures content stays within page margins */
         .page-content {
             width: 100%;
             max-width: 100%;
@@ -90,41 +90,48 @@
             word-wrap: break-word;
         }
 
-        /* Image */
+        /* Image – wider but height‑constrained */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
         }
 
         .recipe-image {
-            max-width: 100%;
+            width: 100%;
+            /* fill the container horizontally */
             max-height: 280px;
-            width: auto;
-            height: auto;
+            /* keep the height you liked */
             object-fit: contain;
+            /* preserve aspect ratio, no cropping */
             border: 1px solid #e8d9b5;
             border-radius: 4px;
         }
 
-        /* Two‑column flexbox layout (reliable in DomPDF) */
+        /* Two‑column table layout (rock‑solid in DomPDF) */
         .two-columns {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            /* forces columns to honour fixed widths */
             margin-top: 4px;
         }
 
+        .col-left,
+        .col-right {
+            display: table-cell;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
         .col-left {
-            flex: 1.2;
-            /* about 36% */
-            min-width: 0;
-            /* allows content to wrap */
+            width: 36%;
+            padding-right: 20px;
+            border-right: 1px solid #e8d9b5;
         }
 
         .col-right {
-            flex: 2;
-            /* about 64% */
-            min-width: 0;
+            width: 64%;
+            padding-left: 20px;
         }
 
         /* Section heading */
@@ -268,7 +275,7 @@
             margin-bottom: 3px;
         }
 
-        /* Prevent page breaks inside important blocks */
+        /* Page break control */
         .header,
         .author,
         .description,
@@ -277,15 +284,15 @@
             page-break-inside: avoid;
         }
 
+        /* Allow the two‑column block to break across pages if needed */
         .two-columns {
-            /* allow it to break across pages */
+            page-break-inside: auto;
         }
 
-        /* Ensure text never overflows */
-        .col-left,
-        .col-right {
-            overflow-wrap: break-word;
-            word-break: break-word;
+        /* Keep individual rows together */
+        .ingredient-list li,
+        .step-item {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -309,14 +316,14 @@
         <!-- Description -->
         <div class="description">{{ $recipe->description }}</div>
 
-        <!-- Image (if any) -->
+        <!-- Image (wider, height‑constrained) -->
         @if($imageData)
             <div class="recipe-image-wrap">
                 <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}" />
             </div>
         @endif
 
-        <!-- Two‑column content (flexbox) -->
+        <!-- Two‑column table layout -->
         <div class="two-columns">
             <!-- Left column -->
             <div class="col-left">
