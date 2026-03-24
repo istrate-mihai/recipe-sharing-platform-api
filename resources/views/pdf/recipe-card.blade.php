@@ -15,38 +15,31 @@
             font-family: 'Georgia', 'Times New Roman', serif;
             background: #fdf6e3;
             color: #3b2a1a;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Keep header, author, description, image, and footer together */
-        .header,
-        .author,
-        .description,
-        .recipe-image-wrap,
-        .footer {
-            page-break-inside: avoid;
+        /* Page margins and border */
+        @page {
+            margin: 32px 40px;
+            border: 3px double #c9a84c;
         }
 
-        /* Allow the two‑column body to break across pages */
-        .body-columns {
-            /* no page-break-inside restriction */
+        /* Main container – ensures content fits inside the page margins */
+        .page-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
-        /* Individual components should not break inside */
-        .time-boxes,
-        .badges,
-        .ingredient-list li,
-        .step-item {
-            page-break-inside: avoid;
-        }
-
-        /* ── Header ── */
+        /* Header */
         .header {
             text-align: center;
             border-bottom: 2px solid #c9a84c;
-            padding-bottom: 14px;
-            margin-bottom: 16px;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
         }
 
         .platform-name {
@@ -54,15 +47,15 @@
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #a08060;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .recipe-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             color: #3b2a1a;
             line-height: 1.2;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .recipe-meta {
@@ -72,19 +65,32 @@
         }
 
         .recipe-meta span {
-            margin: 0 6px;
+            margin: 0 4px;
         }
 
-        /* ── Author ── */
+        /* Author */
         .author {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #a08060;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-style: italic;
         }
 
-        /* ── Recipe image ── */
+        /* Description */
+        .description {
+            font-style: italic;
+            color: #5a4030;
+            text-align: center;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-top: 1px solid #e8d9b5;
+            border-bottom: 1px solid #e8d9b5;
+            font-size: 11px;
+            word-wrap: break-word;
+        }
+
+        /* Image */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
@@ -92,7 +98,7 @@
 
         .recipe-image {
             max-width: 100%;
-            max-height: 250px;
+            max-height: 280px;
             width: auto;
             height: auto;
             object-fit: contain;
@@ -100,43 +106,28 @@
             border-radius: 4px;
         }
 
-        /* ── Description ── */
-        .description {
-            font-style: italic;
-            color: #5a4030;
-            text-align: center;
-            margin-bottom: 14px;
-            padding: 8px 12px;
-            border-top: 1px solid #e8d9b5;
-            border-bottom: 1px solid #e8d9b5;
-            font-size: 11px;
-        }
-
-        /* ── Two column layout ── */
-        .body-columns {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        .col-left,
-        .col-right {
-            display: table-cell;
-            vertical-align: top;
+        /* Two‑column flexbox layout (reliable in DomPDF) */
+        .two-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 4px;
         }
 
         .col-left {
-            width: 36%;
-            padding-right: 20px;
-            border-right: 1px solid #e8d9b5;
+            flex: 1.2;
+            /* about 36% */
+            min-width: 0;
+            /* allows content to wrap */
         }
 
         .col-right {
-            width: 64%;
-            padding-left: 20px;
+            flex: 2;
+            /* about 64% */
+            min-width: 0;
         }
 
-        /* ── Section headings ── */
+        /* Section heading */
         .section-title {
             font-size: 10px;
             letter-spacing: 3px;
@@ -145,25 +136,26 @@
             border-bottom: 1px solid #e8d9b5;
             padding-bottom: 4px;
             margin-bottom: 10px;
+            margin-top: 12px;
         }
 
-        /* ── Time boxes ── */
+        .col-left .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Time boxes */
         .time-boxes {
-            display: table;
-            width: 100%;
+            display: flex;
             margin-bottom: 16px;
+            gap: 1px;
         }
 
         .time-box {
-            display: table-cell;
+            flex: 1;
             text-align: center;
             padding: 6px 4px;
             border: 1px solid #e8d9b5;
             background: #f5efe0;
-        }
-
-        .time-box+.time-box {
-            border-left: none;
         }
 
         .time-value {
@@ -180,7 +172,7 @@
             color: #a08060;
         }
 
-        /* ── Badges ── */
+        /* Badges */
         .badges {
             margin-bottom: 16px;
         }
@@ -198,7 +190,7 @@
             margin-right: 4px;
         }
 
-        /* ── Ingredients ── */
+        /* Ingredient list */
         .ingredient-list {
             list-style: none;
             margin-bottom: 16px;
@@ -210,10 +202,8 @@
             font-size: 11px;
             display: flex;
             justify-content: space-between;
-        }
-
-        .ingredient-list li:last-child {
-            border-bottom: none;
+            flex-wrap: wrap;
+            page-break-inside: avoid;
         }
 
         .ing-name {
@@ -225,7 +215,7 @@
             font-style: italic;
         }
 
-        /* ── Steps ── */
+        /* Steps list */
         .steps-list {
             list-style: none;
         }
@@ -235,6 +225,7 @@
             gap: 10px;
             margin-bottom: 12px;
             font-size: 12px;
+            page-break-inside: avoid;
         }
 
         .step-num {
@@ -255,12 +246,14 @@
         .step-text {
             color: #3b2a1a;
             line-height: 1.5;
+            word-wrap: break-word;
+            flex: 1;
         }
 
-        /* ── Footer ── */
+        /* Footer */
         .footer {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 24px;
             padding-top: 10px;
             border-top: 1px solid #e8d9b5;
             font-size: 10px;
@@ -275,46 +268,57 @@
             margin-bottom: 3px;
         }
 
-        @page {
-            margin: 32px 40px;
-            border: 3px double #c9a84c;
+        /* Prevent page breaks inside important blocks */
+        .header,
+        .author,
+        .description,
+        .recipe-image-wrap,
+        .footer {
+            page-break-inside: avoid;
+        }
+
+        .two-columns {
+            /* allow it to break across pages */
+        }
+
+        /* Ensure text never overflows */
+        .col-left,
+        .col-right {
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
     </style>
 </head>
 
 <body>
-    <div class="page-border">
-
+    <div class="page-content">
         <!-- Header -->
         <div class="header">
             <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
             <div class="recipe-title">{{ $recipe->title }}</div>
             <div class="recipe-meta">
-                <span>{{ ucfirst($recipe->category) }}</span>
-                ·
-                <span>{{ ucfirst($recipe->difficulty) }}</span>
-                ·
-                <span>Prep {{ $recipe->prep_time }} min</span>
-                ·
+                <span>{{ ucfirst($recipe->category) }}</span> ·
+                <span>{{ ucfirst($recipe->difficulty) }}</span> ·
+                <span>Prep {{ $recipe->prep_time }} min</span> ·
                 <span>Cook {{ $recipe->cook_time }} min</span>
             </div>
         </div>
 
         <div class="author">by {{ $recipe->user->name }}</div>
 
-        <!-- Description (now before image, but you can move it back if you prefer) -->
+        <!-- Description -->
         <div class="description">{{ $recipe->description }}</div>
 
-        <!-- Image (only if exists) -->
+        <!-- Image (if any) -->
         @if($imageData)
             <div class="recipe-image-wrap">
                 <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}" />
             </div>
         @endif
 
-        <!-- Two‑column content – now allowed to break across pages -->
-        <div class="body-columns">
-
+        <!-- Two‑column content (flexbox) -->
+        <div class="two-columns">
+            <!-- Left column -->
             <div class="col-left">
                 <div class="section-title">Time</div>
                 <div class="time-boxes">
@@ -349,6 +353,7 @@
                 </ul>
             </div>
 
+            <!-- Right column (Method) -->
             <div class="col-right">
                 <div class="section-title">Method</div>
                 <ol class="steps-list">
@@ -360,7 +365,6 @@
                     @endforeach
                 </ol>
             </div>
-
         </div>
 
         <!-- Footer -->
@@ -368,7 +372,6 @@
             <span class="ornament">❧</span>
             recipe-sharing-platform.com · Premium Recipe Card
         </div>
-
     </div>
 </body>
 
