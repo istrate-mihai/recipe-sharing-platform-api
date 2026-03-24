@@ -305,16 +305,12 @@
 
                     <div class="section-title">Ingredients</div>
                     <ul class="ingredient-list">
-                        <li><span class="ing-name">English muffins, split</span><span class="ing-amount">4</span></li>
-                        <li><span class="ing-name">Canadian bacon or thick-cut ham slices</span><span class="ing-amount">8</span></li>
-                        <li><span class="ing-name">eggs, for poaching</span><span class="ing-amount">8</span></li>
-                        <li><span class="ing-name">white wine vinegar</span><span class="ing-amount">2 tbsp</span></li>
-                        <li><span class="ing-name">egg yolks, for hollandaise</span><span class="ing-amount">4</span></li>
-                        <li><span class="ing-name">unsalted butter, clarified or melted</span><span class="ing-amount">200g</span></li>
-                        <li><span class="ing-name">lemon juice</span><span class="ing-amount">1 tbsp</span></li>
-                        <li><span class="ing-name">cold water</span><span class="ing-amount">1 tbsp</span></li>
-                        <li><span class="ing-name">cayenne pepper</span><span class="ing-amount">pinch</span></li>
-                        <li><span class="ing-name">salt and white pepper</span><span class="ing-amount">to taste</span></li>
+                        @foreach($recipe->ingredients as $ingredient)
+                            <li>
+                                <span class="ing-name">{{ $ingredient['name'] }}</span>
+                                <span class="ing-amount">{{ $ingredient['amount'] }}</span>
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
 
@@ -322,30 +318,12 @@
                 <div class="col-right">
                     <div class="section-title">Method</div>
                     <ol class="steps-list">
-                        <li class="step-item">
-                            <span class="step-num">1</span>
-                            <span class="step-text">Make the hollandaise: place egg yolks and cold water in a heatproof bowl over a pot of barely simmering water. Whisk constantly until the mixture thickens and doubles in volume, about 3–4 minutes. The whisk should leave trails.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">2</span>
-                            <span class="step-text">Remove from heat. Very slowly drizzle in the warm clarified butter, whisking constantly, until you have a thick, glossy sauce. Add lemon juice, cayenne, salt, and white pepper. Keep warm over the hot water, off the heat, whisking occasionally.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">3</span>
-                            <span class="step-text">Cook the Canadian bacon in a dry pan over medium-high heat for 2 minutes per side until lightly crisped. Set aside and keep warm.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">4</span>
-                            <span class="step-text">Toast the English muffin halves until golden and slightly crispy.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">5</span>
-                            <span class="step-text">Bring a wide, deep pan of water to a gentle simmer — you want small bubbles, not a rolling boil. Add white wine vinegar.</span>
-                        </li>
-                        <li class="step-item">
-                            <span class="step-num">6</span>
-                            <span class="step-text">Crack each egg into a small cup. Swirl the water gently with a spoon to create a slow vortex. Slide the egg into the centre. Poach for exactly 3 minutes for a runny yolk. Remove with a slotted spoon and drain on a cloth.</span>
-                        </li>
+                        @foreach($recipe->steps as $index => $step)
+                            <li class="step-item">
+                                <span class="step-num">{{ $index + 1 }}</span>
+                                <span class="step-text">{{ $step }}</span>
+                            </li>
+                        @endforeach
                     </ol>
                 </div>
             </div>
