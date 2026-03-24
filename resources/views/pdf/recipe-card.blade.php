@@ -17,7 +17,22 @@
             color: #3b2a1a;
             font-size: 13px;
             line-height: 1.6;
-            padding: 32px 40px;
+            /* No padding – handled by @page margin */
+        }
+
+        /* Prevent page breaks inside main logical blocks */
+        .header,
+        .author,
+        .description,
+        .recipe-image-wrap,
+        .body-columns,
+        .footer {
+            page-break-inside: avoid;
+        }
+
+        /* Optional: avoid break before the two‑column layout */
+        .body-columns {
+            page-break-before: avoid;
         }
 
         /* ── Header ── */
@@ -65,9 +80,20 @@
 
         /* ── Recipe image ── */
         .recipe-image-wrap {
-            width: 100%;
-            margin-bottom: 16px;
             text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* Limit image size to avoid pushing content to next page */
+        .recipe-image {
+            max-width: 100%;
+            max-height: 250px;
+            /* adjust as needed */
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border: 1px solid #e8d9b5;
+            border-radius: 4px;
         }
 
         /* ── Description ── */
@@ -250,22 +276,6 @@
             margin: 32px 40px;
             border: 3px double #c9a84c;
         }
-
-        body {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            background: #fdf6e3;
-            color: #3b2a1a;
-            font-size: 13px;
-            line-height: 1.6;
-            /* remove padding — @page handles margins now */
-        }
-
-        .recipe-image {
-            width: 100%;
-            object-fit: cover;
-            border: 1px solid #e8d9b5;
-            border-radius: 4px;
-        }
     </style>
 </head>
 
@@ -289,15 +299,15 @@
 
         <div class="author">by {{ $recipe->user->name }}</div>
 
+        <!-- Description moved BEFORE the image to ensure it stays on page 1 -->
+        <div class="description">{{ $recipe->description }}</div>
+
         <!-- Image -->
         @if($imageData)
             <div class="recipe-image-wrap">
                 <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}" />
             </div>
         @endif
-
-        <!-- Description -->
-        <div class="description">{{ $recipe->description }}</div>
 
         <!-- Body columns -->
         <div class="body-columns">
