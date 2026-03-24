@@ -17,22 +17,28 @@
             color: #3b2a1a;
             font-size: 13px;
             line-height: 1.6;
-            /* No padding – handled by @page margin */
         }
 
-        /* Prevent page breaks inside main logical blocks */
+        /* Keep header, author, description, image, and footer together */
         .header,
         .author,
         .description,
         .recipe-image-wrap,
-        .body-columns,
         .footer {
             page-break-inside: avoid;
         }
 
-        /* Optional: avoid break before the two‑column layout */
+        /* Allow the two‑column body to break across pages */
         .body-columns {
-            page-break-before: avoid;
+            /* no page-break-inside restriction */
+        }
+
+        /* Individual components should not break inside */
+        .time-boxes,
+        .badges,
+        .ingredient-list li,
+        .step-item {
+            page-break-inside: avoid;
         }
 
         /* ── Header ── */
@@ -84,11 +90,9 @@
             margin-bottom: 16px;
         }
 
-        /* Limit image size to avoid pushing content to next page */
         .recipe-image {
             max-width: 100%;
             max-height: 250px;
-            /* adjust as needed */
             width: auto;
             height: auto;
             object-fit: contain;
@@ -231,7 +235,6 @@
             gap: 10px;
             margin-bottom: 12px;
             font-size: 12px;
-            page-break-inside: avoid;
         }
 
         .step-num {
@@ -299,17 +302,17 @@
 
         <div class="author">by {{ $recipe->user->name }}</div>
 
-        <!-- Description moved BEFORE the image to ensure it stays on page 1 -->
+        <!-- Description (now before image, but you can move it back if you prefer) -->
         <div class="description">{{ $recipe->description }}</div>
 
-        <!-- Image -->
+        <!-- Image (only if exists) -->
         @if($imageData)
             <div class="recipe-image-wrap">
                 <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}" />
             </div>
         @endif
 
-        <!-- Body columns -->
+        <!-- Two‑column content – now allowed to break across pages -->
         <div class="body-columns">
 
             <div class="col-left">
