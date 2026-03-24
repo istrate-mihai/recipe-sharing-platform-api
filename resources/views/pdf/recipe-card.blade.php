@@ -258,16 +258,16 @@
             <!-- Header -->
             <div class="header">
                 <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
-                <div class="recipe-title">Eggs Benedict</div>
+                <div class="recipe-title">{{ $recipe->title }}</div>
                 <div class="recipe-meta">
-                    <span>Breakfast</span> ·
-                    <span>Medium</span> ·
-                    <span>Prep 20 min</span> ·
-                    <span>Cook 20 min</span>
+                    <span>{{ ucfirst($recipe->category) }}</span> ·
+                    <span>{{ ucfirst($recipe->difficulty) }}</span> ·
+                    <span>Prep {{ $recipe->prep_time }} min</span> ·
+                    <span>Cook {{ $recipe->cook_time }} min</span>
                 </div>
             </div>
 
-            <div class="author">by Chef Mihai</div>
+            <div class="author">by {{ $recipe->user->name }}</div>
 
             <!-- Description -->
             <div class="description">
