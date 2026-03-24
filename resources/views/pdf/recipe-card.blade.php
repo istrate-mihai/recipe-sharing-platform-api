@@ -21,13 +21,15 @@
             padding: 0;
         }
 
-        /* Page margins and border */
-        @page {
-            margin: 32px 40px;
+        /* Simulate page margins with a wrapper (more reliable than @page) */
+        .pdf-page {
+            background: #fdf6e3;
             border: 3px double #c9a84c;
+            padding: 32px 40px;
+            margin: 0;
+            width: 100%;
         }
 
-        /* Main container – ensures content stays within page margins */
         .page-content {
             width: 100%;
             max-width: 100%;
@@ -90,44 +92,40 @@
             word-wrap: break-word;
         }
 
-        /* Image – wider but height‑constrained */
+        /* Image – fixed height container to mimic object-fit: cover */
         .recipe-image-wrap {
             text-align: center;
             margin-bottom: 16px;
-        }
-
-        .recipe-image {
-            width: 100%;
-            max-height: 280px;
-            object-fit: cover;
+            height: 280px;
+            overflow: hidden;
             border: 1px solid #e8d9b5;
             border-radius: 4px;
         }
 
-        /* Two‑column table layout (rock‑solid in DomPDF) */
-        .two-columns {
-            display: table;
+        .recipe-image {
             width: 100%;
-            table-layout: fixed;
+            height: auto;
+            display: block;
+        }
+
+        /* Two‑column flex layout (reliable in DomPDF) */
+        .two-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
             margin-top: 4px;
         }
 
-        .col-left,
-        .col-right {
-            display: table-cell;
-            vertical-align: top;
-            word-wrap: break-word;
-        }
-
         .col-left {
-            width: 36%;
-            padding-right: 20px;
-            border-right: 1px solid #e8d9b5;
+            flex: 1.2;
+            /* about 36% */
+            min-width: 0;
         }
 
         .col-right {
-            width: 64%;
-            padding-left: 20px;
+            flex: 2;
+            /* about 64% */
+            min-width: 0;
         }
 
         /* Section heading */
@@ -227,6 +225,7 @@
             gap: 10px;
             margin-bottom: 12px;
             font-size: 12px;
+            page-break-inside: avoid;
         }
 
         .step-num {
@@ -268,90 +267,102 @@
             display: block;
             margin-bottom: 3px;
         }
+
+        /* Keep important blocks together */
+        .header,
+        .author,
+        .description,
+        .recipe-image-wrap,
+        .two-columns,
+        .footer {
+            page-break-inside: avoid;
+        }
     </style>
 </head>
 
 <body>
-    <div class="page-content">
-        <!-- Header -->
-        <div class="header">
-            <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
-            <div class="recipe-title">{{ $recipe->title }}</div>
-            <div class="recipe-meta">
-                <span>{{ ucfirst($recipe->category) }}</span> ·
-                <span>{{ ucfirst($recipe->difficulty) }}</span> ·
-                <span>Prep {{ $recipe->prep_time }} min</span> ·
-                <span>Cook {{ $recipe->cook_time }} min</span>
+    <div class="pdf-page">
+        <div class="page-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
+                <div class="recipe-title">{{ $recipe->title }}</div>
+                <div class="recipe-meta">
+                    <span>{{ ucfirst($recipe->category) }}</span> ·
+                    <span>{{ ucfirst($recipe->difficulty) }}</span> ·
+                    <span>Prep {{ $recipe->prep_time }} min</span> ·
+                    <span>Cook {{ $recipe->cook_time }} min</span>
+                </div>
             </div>
-        </div>
 
-        <div class="author">by {{ $recipe->user->name }}</div>
+            <div class="author">by {{ $recipe->user->name }}</div>
 
-        <!-- Description -->
-        <div class="description">{{ $recipe->description }}</div>
+            <!-- Description -->
+            <div class="description">{{ $recipe->description }}</div>
 
-        <!-- Image (if exists) -->
-        @if($imageData)
-            <div class="recipe-image-wrap">
-                <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
-            </div>
-        @endif
+            <!-- Image (if exists) – container height forces consistent cropping -->
+            @if($imageData)
+                <div class="recipe-image-wrap">
+                    <img src="{{ $imageData }}" class="recipe-image" alt="{{ $recipe->title }}">
+                </div>
+            @endif
 
-        <!-- Two‑column table layout -->
-        <div class="two-columns">
-            <!-- Left column -->
-            <div class="col-left">
-                <div class="section-title">Time</div>
-                <div class="time-boxes">
-                    <div class="time-box">
-                        <span class="time-value">{{ $recipe->prep_time }}</span>
-                        <span class="time-label">Prep (min)</span>
+            <!-- Two‑column flex layout -->
+            <div class="two-columns">
+                <!-- Left column -->
+                <div class="col-left">
+                    <div class="section-title">Time</div>
+                    <div class="time-boxes">
+                        <div class="time-box">
+                            <span class="time-value">{{ $recipe->prep_time }}</span>
+                            <span class="time-label">Prep (min)</span>
+                        </div>
+                        <div class="time-box">
+                            <span class="time-value">{{ $recipe->cook_time }}</span>
+                            <span class="time-label">Cook (min)</span>
+                        </div>
+                        <div class="time-box">
+                            <span class="time-value">{{ $recipe->prep_time + $recipe->cook_time }}</span>
+                            <span class="time-label">Total (min)</span>
+                        </div>
                     </div>
-                    <div class="time-box">
-                        <span class="time-value">{{ $recipe->cook_time }}</span>
-                        <span class="time-label">Cook (min)</span>
+
+                    <div class="section-title">Details</div>
+                    <div class="badges">
+                        <span class="badge">{{ $recipe->category }}</span>
+                        <span class="badge">{{ $recipe->difficulty }}</span>
                     </div>
-                    <div class="time-box">
-                        <span class="time-value">{{ $recipe->prep_time + $recipe->cook_time }}</span>
-                        <span class="time-label">Total (min)</span>
-                    </div>
+
+                    <div class="section-title">Ingredients</div>
+                    <ul class="ingredient-list">
+                        @foreach($recipe->ingredients as $ingredient)
+                            <li>
+                                <span class="ing-name">{{ $ingredient['name'] }}</span>
+                                <span class="ing-amount">{{ $ingredient['amount'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
 
-                <div class="section-title">Details</div>
-                <div class="badges">
-                    <span class="badge">{{ $recipe->category }}</span>
-                    <span class="badge">{{ $recipe->difficulty }}</span>
+                <!-- Right column (Method) -->
+                <div class="col-right">
+                    <div class="section-title">Method</div>
+                    <ol class="steps-list">
+                        @foreach($recipe->steps as $index => $step)
+                            <li class="step-item">
+                                <span class="step-num">{{ $index + 1 }}</span>
+                                <span class="step-text">{{ $step }}</span>
+                            </li>
+                        @endforeach
+                    </ol>
                 </div>
-
-                <div class="section-title">Ingredients</div>
-                <ul class="ingredient-list">
-                    @foreach($recipe->ingredients as $ingredient)
-                        <li>
-                            <span class="ing-name">{{ $ingredient['name'] }}</span>
-                            <span class="ing-amount">{{ $ingredient['amount'] }}</span>
-                        </li>
-                    @endforeach
-                </ul>
             </div>
 
-            <!-- Right column (Method) -->
-            <div class="col-right">
-                <div class="section-title">Method</div>
-                <ol class="steps-list">
-                    @foreach($recipe->steps as $index => $step)
-                        <li class="step-item">
-                            <span class="step-num">{{ $index + 1 }}</span>
-                            <span class="step-text">{{ $step }}</span>
-                        </li>
-                    @endforeach
-                </ol>
+            <!-- Footer -->
+            <div class="footer">
+                <span class="ornament">❧</span>
+                recipe-sharing-platform.com · Premium Recipe Card
             </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <span class="ornament">❧</span>
-            recipe-sharing-platform.com · Premium Recipe Card
         </div>
     </div>
 </body>
