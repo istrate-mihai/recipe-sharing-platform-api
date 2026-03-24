@@ -175,7 +175,24 @@ class RecipeController extends Controller
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
-    public function getImageData(Recipe $recipe): string
+    public function exportPdf(Recipe $recipe): Response
+    {
+        $recipe->load('user');
+    
+        $imageData = $this->getImageData($recipe);
+    
+        $pdf = Pdf::loadView('pdf.recipe-card', [
+            'recipe'    => $recipe,
+            'imageData' => $imageData,
+        ])->setPaper('a4', 'portrait');
+    
+        return $pdf->download(\Str::slug($recipe->title) . '-recipe-card.pdf');
+    }
+    
+    /**
+     * Returns base64 image data, or a placeholder if the image can't be loaded.
+     */
+    private function getImageData(Recipe $recipe): string
     {
         // Placeholder SVG (light beige box with text)
         $placeholder = 'data:image/svg+xml;base64,' . base64_encode('
