@@ -20,21 +20,6 @@
             padding: 32px 40px;
         }
 
-        /* ── Outer border ── */
-        .page-border {
-            border: 3px double #c9a84c;
-            padding: 28px 32px;
-            position: relative;
-        }
-
-        .page-border::before {
-            content: '';
-            position: absolute;
-            inset: 6px;
-            border: 1px solid #e8d9b5;
-            pointer-events: none;
-        }
-
         /* ── Header ── */
         .header {
             text-align: center;
@@ -74,7 +59,7 @@
             text-align: center;
             font-size: 12px;
             color: #a08060;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             font-style: italic;
         }
 
@@ -85,24 +70,16 @@
             text-align: center;
         }
 
-        .recipe-image {
-            width: 100%;
-            max-height: 220px;
-            object-fit: cover;
-            border: 1px solid #e8d9b5;
-            border-radius: 4px;
-        }
-
         /* ── Description ── */
         .description {
             font-style: italic;
             color: #5a4030;
             text-align: center;
-            margin-bottom: 18px;
-            padding: 10px 16px;
+            margin-bottom: 14px;
+            padding: 8px 12px;
             border-top: 1px solid #e8d9b5;
             border-bottom: 1px solid #e8d9b5;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         /* ── Two column layout ── */
@@ -268,6 +245,27 @@
             display: block;
             margin-bottom: 3px;
         }
+
+        @page {
+            margin: 32px 40px;
+            border: 3px double #c9a84c;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #fdf6e3;
+            color: #3b2a1a;
+            font-size: 13px;
+            line-height: 1.6;
+            /* remove padding — @page handles margins now */
+        }
+
+        .recipe-image {
+            width: 100%;
+            object-fit: cover;
+            border: 1px solid #e8d9b5;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -276,7 +274,7 @@
 
         <!-- Header -->
         <div class="header">
-            <div class="platform-name">Shire Kitchen · Recipe Card</div>
+            <div class="platform-name">Recipe Sharing Platform · Recipe Card</div>
             <div class="recipe-title">{{ $recipe->title }}</div>
             <div class="recipe-meta">
                 <span>{{ ucfirst($recipe->category) }}</span>
