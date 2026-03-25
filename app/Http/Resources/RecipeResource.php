@@ -11,52 +11,45 @@ class RecipeResource extends JsonResource
     public function toArray(Request $request): array
     {
 
-        if (is_array($this->resource)) {
-            \Log::error('RecipeResource received array instead of model', ['resource' => $this->resource]);
-            throw new \Exception('RecipeResource received plain array: ' . json_encode($this->resource));
-        }
-
         $authUser = $request->user();
 
         return [
-            'id'          => $this->id,
-            'title'       => $this->title,
-            'description' => $this->description,
-            'category'    => $this->category,
-            'difficulty'  => $this->difficulty,
-            'prep_time'   => $this->prep_time,
-            'cook_time'   => $this->cook_time,
-            'steps'       => $this->steps,
-            'image_url'   => $this->image
-                                ? rtrim(env('AWS_PUBLIC_URL'), '/') . '/' . $this->image
-                                : null,
-            'likes_count' => $this->likes_count,
-            'created_at'  => $this->created_at,
-            'updated_at'  => $this->updated_at,
+            'id'                        => $this->id,
+            'title'                     => $this->title,
+            'description'               => $this->description,
+            'category'                  => $this->category,
+            'difficulty'                => $this->difficulty,
+            'prep_time'                 => $this->prep_time,
+            'cook_time'                 => $this->cook_time,
+            'steps'                     => $this->steps,
+            'image_url'                 => $this->image
+                                            ? rtrim(env('AWS_PUBLIC_URL'), '/') . '/' . $this->image
+                                            : null,
+            'likes_count'               => $this->likes_count,
+            'created_at'                => $this->created_at,
+            'updated_at'                => $this->updated_at,
 
             // Author info (always loaded)
             'author' => [
-                'id'     => $this->user->id,
-                'name'   => $this->user->name,
-                'avatar' => $this->user->avatar,
+                'id'                    => $this->user->id,
+                'name'                  => $this->user->name,
+                'avatar'                => $this->user->avatar,
             ],
 
             // Auth-dependent flags (null when guest)
-            'is_liked'       => $authUser
-                                    ? $this->likedBy->contains($authUser->id)
-                                    : false,
-            'is_favourited'  => $authUser
-                                    ? $this->favouritedBy->contains($authUser->id)
-                                    : false,
-            'is_owner'       => $authUser
-                                    ? $authUser->id === $this->user_id
-                                    : false,
-
-            'status'         => $this->status,
-
-            'servings'    => $this->servings,
-
-            'ingredients' => IngredientResource::collection($this->whenLoaded('ingredients')),
+            'is_liked'                  => $authUser
+                                            ? $this->likedBy->contains($authUser->id)
+                                            : false,
+            'is_favourited'             => $authUser
+                                            ? $this->favouritedBy->contains($authUser->id)
+                                            : false,
+            'is_owner'                  => $authUser
+                                            ? $authUser->id === $this->user_id
+                                            : false,
+            'status'                    => $this->status,
+            'servings'                  => $this->servings,
+            'ingredients'               => IngredientResource::collection($this->whenLoaded('ingredients')),
+            'nutritional_info'          => $this->nutritional_info,
         ];
     }
 }

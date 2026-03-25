@@ -53,6 +53,7 @@ class RecipeController extends Controller
     public function store(StoreRecipeRequest $request): JsonResponse
     {
         $data = $request->validated();
+
         unset($data['image']);
 
         if ($request->hasFile('image')) {

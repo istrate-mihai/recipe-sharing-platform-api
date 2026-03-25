@@ -22,17 +22,19 @@ class Recipe extends Model
         'image',
         'status',
         'servings',
+        'nutritional_info',
     ];
 
     protected function casts(): array
     {
         return [
-            'steps'       => 'array',
-            'prep_time'   => 'integer',
-            'cook_time'   => 'integer',
-            'likes_count' => 'integer',
-            'status'      => 'string',
-            'servings'    => 'integer',
+            'steps'            => 'array',
+            'prep_time'        => 'integer',
+            'cook_time'        => 'integer',
+            'likes_count'      => 'integer',
+            'status'           => 'string',
+            'servings'         => 'integer',
+            'nutritional_info' => 'array',
         ];
     }
 
