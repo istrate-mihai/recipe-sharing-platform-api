@@ -24,7 +24,15 @@ class RecipeController extends Controller
     {
         auth()->shouldUse('sanctum');
 
-        $recipes = Recipe::with(['user', 'likedBy', 'favouritedBy', 'ingredients'])
+        $recipes = Recipe::with(
+                [
+                    'user',
+                    'likedBy',
+                    'favouritedBy',
+                    'ingredients',
+                    'images',
+                ]
+            )
             ->withCount('likedBy as likes_count')
             ->when(
                 fn($q) => $q->visible()
@@ -54,16 +62,11 @@ class RecipeController extends Controller
     {
         $data = $request->validated();
 
-        unset($data['image']);
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('recipes', 's3');
-            if ($path) {
-                $data['image'] = $path;
-            }
-        }
-
         $recipe = $request->user()->recipes()->create($data);
+
+        if ($request->has('images')) {
+            $this->syncImages($recipe, $request->images);
+        }
 
         if (!empty($data['ingredients'])) {
             collect($data['ingredients'])->each(function ($ing, $i) use ($recipe) {
@@ -76,7 +79,7 @@ class RecipeController extends Controller
             });
         }
 
-        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
+        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients', 'images']);
 
         return response()->json(new RecipeResource($recipe), 201);
     }
@@ -97,7 +100,13 @@ class RecipeController extends Controller
 
         $recipe->loadCount('likedBy as likes_count');
 
-        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
+        $recipe->load([
+            'user',
+            'likedBy',
+            'favouritedBy',
+            'ingredients',
+            'images',
+        ]);
 
         return response()->json(new RecipeResource($recipe));
     }
@@ -112,15 +121,11 @@ class RecipeController extends Controller
 
         $data = $request->validated();
 
-        if ($request->hasFile('image')) {
-            // Delete old image if present
-            if ($recipe->image) {
-                Storage::disk('public')->delete($recipe->image);
-            }
-            $data['image'] = $request->file('image')->store('recipes', 's3');
-        }
-
         $recipe->update($data);
+
+        if ($request->has('images')) {
+            $this->syncImages($recipe, $request->images);
+        }
 
         if (isset($data['ingredients'])) {
             $recipe->ingredients()->delete();
@@ -134,7 +139,7 @@ class RecipeController extends Controller
             });
         }
 
-        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients']);
+        $recipe->load(['user', 'likedBy', 'favouritedBy', 'ingredients', 'images']);
 
         return response()->json(new RecipeResource($recipe));
     }
@@ -241,5 +246,45 @@ class RecipeController extends Controller
         return response()->json([
             'data' => RecipeResource::collection($recipes),
         ]);
+    }
+
+    private function syncImages(Recipe $recipe, array $images): void
+    {
+        $existing   = $recipe->images->keyBy('id');
+        $keepIds    = [];
+
+        foreach ($images as $index => $imageData) {
+            if (isset($imageData['id'])) {
+                // existing image — just update order/is_primary
+                $img = $existing->get($imageData['id']);
+                if ($img) {
+                    $img->update([
+                        'order'      => $index,
+                        'is_primary' => $index === 0,
+                    ]);
+                    $keepIds[] = $img->id;
+                }
+            } else {
+                // new upload
+                $path = Storage::disk('s3')->putFile(
+                    'recipes',
+                    $imageData['file']
+                );
+                $new = $recipe->images()->create([
+                    'path'       => $path,
+                    'order'      => $index,
+                    'is_primary' => $index === 0,
+                ]);
+                $keepIds[] = $new->id;
+            }
+        }
+
+        // delete removed images
+        $recipe->images()
+            ->whereNotIn('id', $keepIds)
+            ->each(function ($img) {
+                Storage::disk('s3')->delete($img->path);
+                $img->delete();
+            });
     }
 }

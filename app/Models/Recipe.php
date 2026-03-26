@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Recipe extends Model
 {
@@ -40,24 +43,29 @@ class Recipe extends Model
 
     // ── Relationships ────────────────────────────────────────────────────────
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function likedBy()
+    public function likedBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'likes')->withPivot('created_at');;
     }
 
-    public function favouritedBy()
+    public function favouritedBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'favourites')->withPivot('created_at');
     }
 
-    public function ingredients()
+    public function ingredients(): HasMany
     {
         return $this->hasMany(Ingredient::class)->orderBy('order');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(RecipeImage::class)->orderBy('order');
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────

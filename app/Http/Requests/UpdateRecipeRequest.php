@@ -22,6 +22,8 @@ class UpdateRecipeRequest extends FormRequest
             'difficulty'                => ['sometimes', Rule::in(['easy','medium','hard'])],
             'prep_time'                 => ['sometimes', 'integer', 'min:0'],
             'cook_time'                 => ['sometimes', 'integer', 'min:0'],
+
+            // Steps: at least 1 non-empty string
             'steps'                     => ['sometimes', 'array', 'min:1'],
             'steps.*'                   => ['required_with:steps', 'string', 'min:1'],
 
@@ -31,14 +33,19 @@ class UpdateRecipeRequest extends FormRequest
             'ingredients.*.quantity'    => ['nullable', 'numeric', 'min:0', 'max:9999'],
             'ingredients.*.unit'        => ['nullable', 'string', 'max:50'],
 
-            'image'                     => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'status'                    => 'sometimes|in:published,draft,private',
 
+            // Nutritional info validation
             'nutritional_info'          => ['nullable', 'array'],
             'nutritional_info.calories' => ['nullable', 'integer', 'min:0'],
             'nutritional_info.protein'  => ['nullable', 'numeric', 'min:0'],
             'nutritional_info.carbs'    => ['nullable', 'numeric', 'min:0'],
             'nutritional_info.fat'      => ['nullable', 'numeric', 'min:0'],
+
+            // Recipe Images validation for premium
+            'images'           => ['nullable', 'array', 'max:5'],
+            'images.*.file'    => ['nullable', 'image', 'max:4096'],
+            'images.*.id'      => ['nullable', 'integer', 'exists:recipe_images,id'],
         ];
     }
 

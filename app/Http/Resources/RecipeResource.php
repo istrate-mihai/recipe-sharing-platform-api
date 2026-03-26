@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\RecipeImageResource;
 
 class RecipeResource extends JsonResource
 {
@@ -22,9 +23,6 @@ class RecipeResource extends JsonResource
             'prep_time'                 => $this->prep_time,
             'cook_time'                 => $this->cook_time,
             'steps'                     => $this->steps,
-            'image_url'                 => $this->image
-                                            ? rtrim(env('AWS_PUBLIC_URL'), '/') . '/' . $this->image
-                                            : null,
             'likes_count'               => $this->likes_count,
             'created_at'                => $this->created_at,
             'updated_at'                => $this->updated_at,
@@ -50,6 +48,8 @@ class RecipeResource extends JsonResource
             'servings'                  => $this->servings,
             'ingredients'               => IngredientResource::collection($this->whenLoaded('ingredients')),
             'nutritional_info'          => $this->nutritional_info,
+
+            'images'                    => RecipeImageResource::collection($this->whenLoaded('images')),
         ];
     }
 }
