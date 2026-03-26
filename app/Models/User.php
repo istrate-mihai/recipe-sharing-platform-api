@@ -59,6 +59,11 @@ class User extends Authenticatable
         return $this->hasOne(Subscription::class)->latestOfMany();
     }
 
+    public function collections(): HasMany
+    {
+        return $this->hasMany(Collection::class);
+    }
+
     public function isPremium(): bool
     {
         return $this->subscription?->isActive() ?? false;

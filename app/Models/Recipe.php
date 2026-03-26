@@ -68,6 +68,12 @@ class Recipe extends Model
         return $this->hasMany(RecipeImage::class)->orderBy('order');
     }
 
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class, 'collection_recipe')
+                    ->withPivot('order')
+                    ->withTimestamps();
+    }
     // ── Scopes ───────────────────────────────────────────────────────────────
 
     public function scopeSearch($query, ?string $term)

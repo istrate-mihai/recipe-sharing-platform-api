@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\FavouriteController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecipeController;
+use App\Http\Controllers\Api\CollectionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WebhookController;
@@ -66,6 +67,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Premium only — PDF recipe card export
     Route::middleware('premium')->group(function () {
         Route::get('recipes/{recipe}/export-pdf', [RecipeController::class, 'exportPdf']);
+
+        Route::prefix('collections')->group(function () {
+            Route::get('/',                                  [CollectionController::class, 'index']);
+            Route::post('/',                                 [CollectionController::class, 'store']);
+            Route::get('/{collection}',                      [CollectionController::class, 'show']);
+            Route::put('/{collection}',                      [CollectionController::class, 'update']);
+            Route::delete('/{collection}',                   [CollectionController::class, 'destroy']);
+            Route::post('/{collection}/recipes',             [CollectionController::class, 'addRecipe']);
+            Route::delete('/{collection}/recipes/{recipe}',  [CollectionController::class, 'removeRecipe']);
+        });
     });
 
     Route::get('/my-recipes', [RecipeController::class, 'myRecipes']);

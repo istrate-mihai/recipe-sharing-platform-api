@@ -6,6 +6,7 @@ use App\Models\Recipe;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Subscription;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,6 +19,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'avatar'   => 'AL',
             'bio'      => 'Mathematician & first programmer.',
+            'stripe_customer_id' => 'cus_test_ada',
         ]);
 
         $grace = User::create([
@@ -26,6 +28,37 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'avatar'   => 'GH',
             'bio'      => 'Pioneer of computer programming.',
+            'stripe_customer_id' => 'cus_test_grace',
+        ]);
+
+        // Free tier — no subscription row at all
+        $free = User::create([
+            'name'     => 'Free User',
+            'email'    => 'free@example.com',
+            'password' => Hash::make('password'),
+            'avatar'   => 'FU',
+            'bio'      => 'Just browsing.',
+        ]);
+
+        // ── Subscriptions ─────────────────────────────────────────────────
+        // Ada — active subscription
+        Subscription::create([
+            'user_id'            => $ada->id,
+            'stripe_id'          => 'sub_test_ada',
+            'stripe_customer_id' => 'cus_test_ada',
+            'stripe_price_id'    => 'price_test_monthly',
+            'status'             => 'active',
+            'ends_at'            => null,
+        ]);
+
+        // Grace — canceled but still within paid period (tests the other isActive() branch)
+        Subscription::create([
+            'user_id'            => $grace->id,
+            'stripe_id'          => 'sub_test_grace',
+            'stripe_customer_id' => 'cus_test_grace',
+            'stripe_price_id'    => 'price_test_monthly',
+            'status'             => 'canceled',
+            'ends_at'            => now()->addDays(14),
         ]);
 
         // ── Recipes ───────────────────────────────────────────────────────
@@ -274,8 +307,13 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-        $this->command->info('Database seeded successfully.');
-        $this->command->info('ada@example.com / password');
-        $this->command->info('grace@example.com / password');
+        $this->call(CollectionSeeder::class, false, [
+            'ada'   => $ada,
+            'grace' => $grace,
+        ]);
+
+        $this->command->info('ada@example.com / password    (active premium)');
+        $this->command->info('grace@example.com / password  (canceled, 14 days remaining)');
+        $this->command->info('free@example.com / password   (free tier — 403 on all collection routes)');
     }
 }
