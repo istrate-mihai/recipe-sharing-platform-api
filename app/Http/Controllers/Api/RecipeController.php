@@ -7,12 +7,13 @@ use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 use App\Http\Resources\RecipeResource;
 use App\Models\Recipe;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class RecipeController extends Controller
 {
@@ -25,17 +26,17 @@ class RecipeController extends Controller
         auth()->shouldUse('sanctum');
 
         $recipes = Recipe::with(
-                [
-                    'user',
-                    'likedBy',
-                    'favouritedBy',
-                    'ingredients',
-                    'images',
-                ]
-            )
+            [
+                'user',
+                'likedBy',
+                'favouritedBy',
+                'ingredients',
+                'images',
+            ]
+        )
             ->withCount('likedBy as likes_count')
             ->when(
-                fn($q) => $q->visible()
+                fn ($q) => $q->visible()
             )
             ->search($request->query('search'))
             ->category($request->query('category'))
@@ -47,9 +48,9 @@ class RecipeController extends Controller
             'data' => RecipeResource::collection($recipes->getCollection()),
             'meta' => [
                 'current_page' => $recipes->currentPage(),
-                'last_page'    => $recipes->lastPage(),
-                'per_page'     => $recipes->perPage(),
-                'total'        => $recipes->total(),
+                'last_page' => $recipes->lastPage(),
+                'per_page' => $recipes->perPage(),
+                'total' => $recipes->total(),
             ],
         ]);
     }
@@ -68,13 +69,13 @@ class RecipeController extends Controller
             $this->syncImages($recipe, $request->images);
         }
 
-        if (!empty($data['ingredients'])) {
+        if (! empty($data['ingredients'])) {
             collect($data['ingredients'])->each(function ($ing, $i) use ($recipe) {
                 $recipe->ingredients()->create([
                     'quantity' => $ing['quantity'] ?? null,
-                    'unit'     => $ing['unit'] ?? null,
-                    'name'     => $ing['name'],
-                    'order'    => $i,
+                    'unit' => $ing['unit'] ?? null,
+                    'name' => $ing['name'],
+                    'order' => $i,
                 ]);
             });
         }
@@ -93,7 +94,7 @@ class RecipeController extends Controller
         auth()->shouldUse('sanctum');
 
         if ($recipe->status !== 'published') {
-            if (!auth()->check() || auth()->id() !== $recipe->user_id) {
+            if (! auth()->check() || auth()->id() !== $recipe->user_id) {
                 return response()->json(['message' => 'Not found.'], 404);
             }
         }
@@ -132,9 +133,9 @@ class RecipeController extends Controller
             collect($data['ingredients'])->each(function ($ing, $i) use ($recipe) {
                 $recipe->ingredients()->create([
                     'quantity' => $ing['quantity'] ?? null,
-                    'unit'     => $ing['unit'] ?? null,
-                    'name'     => $ing['name'],
-                    'order'    => $i,
+                    'unit' => $ing['unit'] ?? null,
+                    'name' => $ing['name'],
+                    'order' => $i,
                 ]);
             });
         }
@@ -147,7 +148,6 @@ class RecipeController extends Controller
     /**
      * DELETE /api/recipes/{recipe}
      * Auth + owner only.
-     *
      */
     public function destroy(Recipe $recipe): JsonResponse
     {
@@ -190,7 +190,7 @@ class RecipeController extends Controller
 
         // Dynamic recipe pages
         foreach ($recipes as $recipe) {
-            $lastmod = \Carbon\Carbon::parse($recipe->updated_at)->toDateString();
+            $lastmod = Carbon::parse($recipe->updated_at)->toDateString();
             $urls .= "  <url>\n";
             $urls .= "    <loc>https://recipe-sharing-platform.com/recipe/{$recipe->id}</loc>\n";
             $urls .= "    <lastmod>{$lastmod}</lastmod>\n";
@@ -202,33 +202,35 @@ class RecipeController extends Controller
         $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
         $xml .= $urls;
-        $xml .= "</urlset>";
+        $xml .= '</urlset>';
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
     public function exportPdf(Recipe $recipe): Response
     {
-        $recipe->load('user');
+        $recipe->load(['user', 'ingredients', 'images']);
 
         $imageData = null;
-        if ($recipe->image) {
+        $primaryImage = $recipe->images->firstWhere('is_primary', true)
+                    ?? $recipe->images->first();
+
+        if ($primaryImage) {
             try {
-                $contents = Storage::disk('s3')->get($recipe->image);
-                $mimeType = Storage::disk('s3')->mimeType($recipe->image);
-                $imageData = 'data:' . $mimeType . ';base64,' . base64_encode($contents);
+                $contents = Storage::disk('s3')->get($primaryImage->path);
+                $mimeType = Storage::disk('s3')->mimeType($primaryImage->path);
+                $imageData = 'data:'.$mimeType.';base64,'.base64_encode($contents);
             } catch (\Exception $e) {
-                // Log but continue without image
-                \Log::error('Failed to fetch recipe image: ' . $e->getMessage());
+                \Log::error('Failed to fetch recipe image: '.$e->getMessage());
             }
         }
 
         $pdf = Pdf::loadView('pdf.recipe-card', [
-            'recipe'    => $recipe,
+            'recipe' => $recipe,
             'imageData' => $imageData,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->download(\Str::slug($recipe->title) . '-recipe-card.pdf');
+        return $pdf->download(\Str::slug($recipe->title).'-recipe-card.pdf');
     }
 
     /**
@@ -250,8 +252,8 @@ class RecipeController extends Controller
 
     private function syncImages(Recipe $recipe, array $images): void
     {
-        $existing   = $recipe->images->keyBy('id');
-        $keepIds    = [];
+        $existing = $recipe->images->keyBy('id');
+        $keepIds = [];
 
         foreach ($images as $index => $imageData) {
             if (isset($imageData['id'])) {
@@ -259,7 +261,7 @@ class RecipeController extends Controller
                 $img = $existing->get($imageData['id']);
                 if ($img) {
                     $img->update([
-                        'order'      => $index,
+                        'order' => $index,
                         'is_primary' => $index === 0,
                     ]);
                     $keepIds[] = $img->id;
@@ -271,8 +273,8 @@ class RecipeController extends Controller
                     $imageData['file']
                 );
                 $new = $recipe->images()->create([
-                    'path'       => $path,
-                    'order'      => $index,
+                    'path' => $path,
+                    'order' => $index,
                     'is_primary' => $index === 0,
                 ]);
                 $keepIds[] = $new->id;
