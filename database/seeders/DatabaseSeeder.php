@@ -14,20 +14,20 @@ class DatabaseSeeder extends Seeder
     {
         // ── Users ─────────────────────────────────────────────────────────
         $ada = User::create([
-            'name'     => 'Ada Lovelace',
-            'email'    => 'ada@example.com',
-            'password' => Hash::make('password'),
-            'avatar'   => 'AL',
-            'bio'      => 'Mathematician & first programmer.',
+            'name'               => 'Ada Lovelace',
+            'email'              => 'ada@example.com',
+            'password'           => Hash::make('password'),
+            'avatar'             => 'AL',
+            'bio'                => 'Mathematician & first programmer.',
             'stripe_customer_id' => 'cus_test_ada',
         ]);
 
         $grace = User::create([
-            'name'     => 'Grace Hopper',
-            'email'    => 'grace@example.com',
-            'password' => Hash::make('password'),
-            'avatar'   => 'GH',
-            'bio'      => 'Pioneer of computer programming.',
+            'name'               => 'Grace Hopper',
+            'email'              => 'grace@example.com',
+            'password'           => Hash::make('password'),
+            'avatar'             => 'GH',
+            'bio'                => 'Pioneer of computer programming.',
             'stripe_customer_id' => 'cus_test_grace',
         ]);
 

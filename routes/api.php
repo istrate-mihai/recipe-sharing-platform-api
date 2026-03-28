@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\CollectionController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WebhookController;
