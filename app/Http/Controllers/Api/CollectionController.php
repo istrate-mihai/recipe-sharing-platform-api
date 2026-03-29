@@ -19,7 +19,7 @@ class CollectionController extends Controller
         $collections = $request->user()
             ->collections()
             ->withCount('recipes')
-            ->with(['recipes' => fn($q) => $q->limit(4)]) // cover thumbnails only
+            ->with(['recipes' => fn($q) => $q->limit(4)->with('images')])
             ->latest()
             ->get();
 
