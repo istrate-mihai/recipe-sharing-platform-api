@@ -31,7 +31,6 @@ class DatabaseSeeder extends Seeder
             'stripe_customer_id' => 'cus_test_grace',
         ]);
 
-        // Free tier — no subscription row at all
         $free = User::create([
             'name'     => 'Free User',
             'email'    => 'free@example.com',
@@ -41,7 +40,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ── Subscriptions ─────────────────────────────────────────────────
-        // Ada — active subscription
         Subscription::create([
             'user_id'            => $ada->id,
             'stripe_id'          => 'sub_test_ada',
@@ -51,7 +49,6 @@ class DatabaseSeeder extends Seeder
             'ends_at'            => null,
         ]);
 
-        // Grace — canceled but still within paid period (tests the other isActive() branch)
         Subscription::create([
             'user_id'            => $grace->id,
             'stripe_id'          => 'sub_test_grace',
@@ -61,8 +58,8 @@ class DatabaseSeeder extends Seeder
             'ends_at'            => now()->addDays(14),
         ]);
 
-        // ── Recipes ───────────────────────────────────────────────────────
-        $recipes = [
+        // ── Recipes: 8 handcrafted + 92 factory = 100 total ──────────────
+        $handcrafted = [
             [
                 'user_id'     => $ada->id,
                 'title'       => 'Spaghetti Carbonara',
@@ -290,12 +287,12 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        // ── Create recipes + ingredients ──────────────────────────────────
-        foreach ($recipes as $data) {
+        // Create the 8 handcrafted recipes with full ingredients
+        foreach ($handcrafted as $data) {
             $ingredients = $data['ingredients'];
             unset($data['ingredients']);
 
-            $recipe = Recipe::create($data);
+            $recipe = Recipe::create(array_merge($data, ['status' => 'published']));
 
             collect($ingredients)->each(function ($ing, $i) use ($recipe) {
                 $recipe->ingredients()->create([
@@ -307,13 +304,45 @@ class DatabaseSeeder extends Seeder
             });
         }
 
+        // Generate 92 factory recipes spread evenly across categories + both users
+        $categories = ['breakfast', 'pasta', 'soup', 'salad', 'meat', 'dessert', 'vegetarian'];
+        $users      = [$ada->id, $grace->id];
+        $perCategory = intdiv(92, count($categories)); // 13 each = 91, +1 bonus
+        $generated  = 0;
+
+        foreach ($categories as $category) {
+            $count = ($category === 'breakfast') ? $perCategory + 1 : $perCategory; // 92 total
+            for ($i = 0; $i < $count; $i++) {
+                $attrs   = (new \Database\Factories\RecipeFactory())->category($category)->definition();
+                $attrs['user_id'] = $users[$generated % 2];
+                // Spread created_at so feed ordering looks natural
+                $attrs['created_at'] = now()->subMinutes($generated * 7);
+                $attrs['updated_at'] = $attrs['created_at'];
+
+                $recipe = Recipe::create($attrs);
+
+                $ingredients = \Database\Factories\RecipeFactory::ingredientsFor($category);
+                collect($ingredients)->each(function ($ing, $j) use ($recipe) {
+                    $recipe->ingredients()->create([
+                        'quantity' => $ing['quantity'] ?? null,
+                        'unit'     => $ing['unit']     ?? null,
+                        'name'     => $ing['name'],
+                        'order'    => $j,
+                    ]);
+                });
+
+                $generated++;
+            }
+        }
+
         $this->call(CollectionSeeder::class, false, [
             'ada'   => $ada,
             'grace' => $grace,
         ]);
 
+        $this->command->info('Seeded ' . (8 + $generated) . ' recipes total.');
         $this->command->info('ada@example.com / password    (active premium)');
         $this->command->info('grace@example.com / password  (canceled, 14 days remaining)');
-        $this->command->info('free@example.com / password   (free tier — 403 on all collection routes)');
+        $this->command->info('free@example.com / password   (free tier)');
     }
 }
